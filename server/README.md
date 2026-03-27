@@ -17,6 +17,7 @@ Node.js + Express + MongoDB backend for the Smart Internship & Career Tracker pr
 - admin dashboard route
 - reviewer queue route
 - analytics and reminders
+- Swagger / OpenAPI documentation
 - RBAC test suite with Jest and Supertest
 
 ## Authentication Flow
@@ -60,6 +61,12 @@ npm install
 npm run dev
 ```
 
+Swagger UI will be available at:
+
+```bash
+http://localhost:5001/api/docs
+```
+
 ## Useful Scripts
 
 ```bash
@@ -80,6 +87,7 @@ npm run rbac-preflight
 - `GET /api/auth/google`
 - `GET /api/auth/google/callback`
 - `GET /api/auth/me`
+- `GET /api/docs`
 
 ### RBAC Example Routes
 

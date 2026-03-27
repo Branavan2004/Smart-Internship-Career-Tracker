@@ -5,8 +5,10 @@ import express from "express";
 import morgan from "morgan";
 import passport from "passport";
 import path from "path";
+import swaggerUi from "swagger-ui-express";
 import { fileURLToPath } from "url";
 import "./config/passport.js";
+import { swaggerSpec } from "./config/swagger.js";
 import analyticsRoutes from "./routes/analyticsRoutes.js";
 import adminRoutes from "./routes/adminRoutes.js";
 import applicationRoutes from "./routes/applicationRoutes.js";
@@ -42,6 +44,7 @@ app.get("/api/health", (_req, res) => {
   });
 });
 
+app.use("/api/docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 app.use("/api/auth", authRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/profile", profileRoutes);

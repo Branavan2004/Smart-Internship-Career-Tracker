@@ -10,6 +10,7 @@ A full-stack internship management platform built with React, Node.js, Express, 
 - JWT-based authentication with access + refresh tokens
 - Role-Based Access Control (RBAC) with `student`, `admin`, and `reviewer`
 - HTTP-only cookie refresh-token sessions
+- Swagger / OpenAPI API documentation
 - Protected frontend routes and role-aware UI
 - File uploads with Multer
 - Analytics dashboards with Recharts
@@ -59,6 +60,7 @@ A full-stack internship management platform built with React, Node.js, Express, 
 - role-type distribution
 - rejection insights
 - reminder and follow-up summary endpoints
+- live Swagger UI for backend API exploration
 
 ## Tech Stack
 
@@ -84,6 +86,8 @@ A full-stack internship management platform built with React, Node.js, Express, 
 - cookie-parser
 - Multer
 - Nodemailer
+- swagger-jsdoc
+- swagger-ui-express
 - Jest
 - Supertest
 
@@ -164,6 +168,10 @@ This mirrors enterprise identity platforms by separating short-lived API authori
 - `GET /api/reminders`
 - `POST /api/reminders/send`
 
+### API Documentation
+
+- `GET /api/docs` -> Swagger UI
+
 ## Environment Variables
 
 ### Frontend
@@ -223,6 +231,7 @@ npm run dev:client
 
 - frontend: `http://localhost:5173`
 - backend health route: `http://localhost:5001/api/health`
+- Swagger UI: `http://localhost:5001/api/docs`
 
 ## Testing and RBAC Validation
 
@@ -295,6 +304,7 @@ This project now goes beyond basic CRUD. It demonstrates:
 - secure session management
 - refresh-token rotation
 - defensive token revocation
+- API contract documentation with OpenAPI
 - backend and frontend access-control testing
 
 That makes it much closer to how real internal tools and enterprise identity-aware apps are built.
