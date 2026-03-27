@@ -4,6 +4,7 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import { useAuth } from "./hooks/useAuth";
 import AuthPage from "./pages/AuthPage";
 import DashboardPage from "./pages/DashboardPage";
+import GoogleAuthCallbackPage from "./pages/GoogleAuthCallbackPage";
 import ProfilePage from "./pages/ProfilePage";
 
 const App = () => {
@@ -16,6 +17,7 @@ const App = () => {
   return (
     <Routes>
       <Route path="/auth" element={token ? <Navigate to="/" replace /> : <AuthPage />} />
+      <Route path="/auth/callback" element={<GoogleAuthCallbackPage />} />
       <Route
         path="/"
         element={

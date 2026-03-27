@@ -13,6 +13,7 @@ const AuthPage = () => {
   });
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const googleLoginUrl = `${import.meta.env.VITE_API_URL || "http://localhost:5001/api"}/auth/google`;
 
   const handleChange = (event) => {
     const { name, value } = event.target;
@@ -84,6 +85,16 @@ const AuthPage = () => {
 
           <button type="submit" className="primary-button" disabled={submitting}>
             {submitting ? "Please wait..." : mode === "login" ? "Login" : "Create account"}
+          </button>
+
+          <button
+            type="button"
+            className="secondary-button"
+            onClick={() => {
+              window.location.href = googleLoginUrl;
+            }}
+          >
+            Continue with Google
           </button>
         </form>
       </section>

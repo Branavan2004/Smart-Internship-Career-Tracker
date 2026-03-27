@@ -2,8 +2,10 @@ import cors from "cors";
 import dotenv from "dotenv";
 import express from "express";
 import morgan from "morgan";
+import passport from "passport";
 import path from "path";
 import { fileURLToPath } from "url";
+import "./config/passport.js";
 import analyticsRoutes from "./routes/analyticsRoutes.js";
 import applicationRoutes from "./routes/applicationRoutes.js";
 import authRoutes from "./routes/authRoutes.js";
@@ -26,6 +28,7 @@ app.use(
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(morgan("dev"));
+app.use(passport.initialize());
 app.use("/uploads", express.static(path.join(__dirname, "../uploads")));
 
 app.get("/api/health", (_req, res) => {

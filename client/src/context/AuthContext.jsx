@@ -52,6 +52,25 @@ export const AuthProvider = ({ children }) => {
     return response.data.user;
   };
 
+  const completeOAuthLogin = async (authToken) => {
+    localStorage.setItem("careerTrackerToken", authToken);
+    setToken(authToken);
+
+    try {
+      const response = await apiClient.get("/auth/me", {
+        headers: {
+          Authorization: `Bearer ${authToken}`
+        }
+      });
+
+      setUser(response.data.user);
+      return response.data.user;
+    } catch (error) {
+      clearSession();
+      throw error;
+    }
+  };
+
   const logout = () => {
     clearSession();
   };
@@ -68,6 +87,7 @@ export const AuthProvider = ({ children }) => {
         loading,
         register,
         login,
+        completeOAuthLogin,
         logout,
         loadCurrentUser,
         updateUser

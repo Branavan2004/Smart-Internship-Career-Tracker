@@ -8,6 +8,11 @@ const userSchema = new mongoose.Schema(
       required: true,
       trim: true
     },
+    googleId: {
+      type: String,
+      unique: true,
+      sparse: true
+    },
     email: {
       type: String,
       required: true,
@@ -15,9 +20,12 @@ const userSchema = new mongoose.Schema(
       lowercase: true,
       trim: true
     },
+    profilePicture: {
+      type: String,
+      default: ""
+    },
     password: {
       type: String,
-      required: true,
       minlength: 6
     },
     phone: {
@@ -47,7 +55,7 @@ const userSchema = new mongoose.Schema(
 );
 
 userSchema.pre("save", async function savePassword(next) {
-  if (!this.isModified("password")) {
+  if (!this.isModified("password") || !this.password) {
     next();
     return;
   }
@@ -58,6 +66,10 @@ userSchema.pre("save", async function savePassword(next) {
 });
 
 userSchema.methods.matchPassword = function matchPassword(candidatePassword) {
+  if (!this.password) {
+    return false;
+  }
+
   return bcrypt.compare(candidatePassword, this.password);
 };
 
