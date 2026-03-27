@@ -170,7 +170,7 @@ This mirrors enterprise identity platforms by separating short-lived API authori
 
 ### API Documentation
 
-- `GET /api/docs` -> Swagger UI
+- `GET /api/docs` -> Swagger UI for auth, RBAC, profile, analytics, and reminder endpoints
 
 ## Environment Variables
 

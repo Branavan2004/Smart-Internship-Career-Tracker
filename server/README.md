@@ -105,3 +105,5 @@ npm run rbac-preflight
 - `GET /api/analytics`
 - `GET /api/reminders`
 - `POST /api/reminders/send`
+
+Swagger currently documents auth, RBAC, profile, analytics, and reminder routes through `GET /api/docs`.

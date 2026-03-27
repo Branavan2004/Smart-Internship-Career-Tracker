@@ -106,6 +106,52 @@ export const swaggerSpec = swaggerJsdoc({
             message: { type: "string", example: "Logged out successfully." }
           }
         },
+        ProfileUpdateRequest: {
+          type: "object",
+          properties: {
+            name: { type: "string", example: "Jane Student" },
+            email: { type: "string", format: "email", example: "student@test.com" },
+            phone: { type: "string", example: "+94 77 123 4567" },
+            skills: {
+              oneOf: [
+                {
+                  type: "array",
+                  items: { type: "string" }
+                },
+                {
+                  type: "string",
+                  example: "React, Node.js, MongoDB"
+                }
+              ]
+            },
+            resumeUrl: {
+              type: "string",
+              example: "https://drive.google.com/file/d/resume"
+            },
+            weeklyDigestEnabled: { type: "boolean", example: true },
+            resume: {
+              type: "string",
+              format: "binary",
+              description: "Resume file upload when using multipart/form-data."
+            }
+          }
+        },
+        ProfileResponse: {
+          type: "object",
+          properties: {
+            user: { $ref: "#/components/schemas/User" }
+          }
+        },
+        ProfileUpdateResponse: {
+          type: "object",
+          properties: {
+            message: {
+              type: "string",
+              example: "Profile updated successfully."
+            },
+            user: { $ref: "#/components/schemas/User" }
+          }
+        },
         AdminDashboardResponse: {
           type: "object",
           properties: {
@@ -159,6 +205,74 @@ export const swaggerSpec = swaggerJsdoc({
             applications: {
               type: "array",
               items: { $ref: "#/components/schemas/Application" }
+            }
+          }
+        },
+        AnalyticsPoint: {
+          type: "object",
+          properties: {
+            name: { type: "string", example: "SE" },
+            value: { type: "integer", example: 4 }
+          }
+        },
+        AnalyticsResponse: {
+          type: "object",
+          properties: {
+            stats: {
+              type: "object",
+              properties: {
+                total: { type: "integer", example: 10 },
+                pending: { type: "integer", example: 3 },
+                interviewed: { type: "integer", example: 2 },
+                accepted: { type: "integer", example: 1 },
+                rejected: { type: "integer", example: 2 },
+                offer: { type: "integer", example: 2 },
+                portfolioViewed: { type: "integer", example: 5 },
+                successRate: { type: "number", example: 30.0 }
+              }
+            },
+            roleBreakdown: {
+              type: "array",
+              items: { $ref: "#/components/schemas/AnalyticsPoint" }
+            },
+            rejectionReasons: {
+              type: "array",
+              items: { $ref: "#/components/schemas/AnalyticsPoint" }
+            }
+          }
+        },
+        ReminderDigestItem: {
+          type: "object",
+          properties: {
+            title: { type: "string", example: "Follow up with Acme Labs" },
+            dueDate: { type: "string", format: "date-time" },
+            status: { type: "string", example: "Due soon" }
+          }
+        },
+        ReminderSummaryResponse: {
+          type: "object",
+          properties: {
+            summary: {
+              type: "string",
+              example: "You have 2 follow-ups and 1 interview reminder this week."
+            },
+            reminders: {
+              type: "array",
+              items: { $ref: "#/components/schemas/ReminderDigestItem" }
+            }
+          }
+        },
+        ReminderSendResponse: {
+          type: "object",
+          properties: {
+            message: {
+              type: "string",
+              example: "Simulated reminder email generated."
+            },
+            digest: { $ref: "#/components/schemas/ReminderSummaryResponse" },
+            preview: {
+              type: "string",
+              example: "Subject: Weekly reminder digest..."
             }
           }
         }
