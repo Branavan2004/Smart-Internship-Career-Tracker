@@ -5,11 +5,11 @@ import {
   getApplications,
   updateApplication
 } from "../controllers/applicationController.js";
-import { protect } from "../middleware/authMiddleware.js";
+import { authorizeRoles, verifyJWT } from "../middleware/authMiddleware.js";
 
 const router = express.Router();
 
-router.use(protect);
+router.use(verifyJWT, authorizeRoles("student"));
 router.route("/").get(getApplications).post(createApplication);
 router.route("/:id").put(updateApplication).delete(deleteApplication);
 

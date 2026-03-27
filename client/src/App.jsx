@@ -3,9 +3,11 @@ import AppShell from "./layouts/AppShell";
 import ProtectedRoute from "./components/ProtectedRoute";
 import { useAuth } from "./hooks/useAuth";
 import AuthPage from "./pages/AuthPage";
+import AdminDashboardPage from "./pages/AdminDashboardPage";
 import DashboardPage from "./pages/DashboardPage";
 import GoogleAuthCallbackPage from "./pages/GoogleAuthCallbackPage";
 import ProfilePage from "./pages/ProfilePage";
+import ReviewQueuePage from "./pages/ReviewQueuePage";
 
 const App = () => {
   const { token, loading } = useAuth();
@@ -28,6 +30,22 @@ const App = () => {
       >
         <Route index element={<DashboardPage />} />
         <Route path="profile" element={<ProfilePage />} />
+        <Route
+          path="admin"
+          element={
+            <ProtectedRoute allowedRoles={["admin"]}>
+              <AdminDashboardPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="review"
+          element={
+            <ProtectedRoute allowedRoles={["reviewer"]}>
+              <ReviewQueuePage />
+            </ProtectedRoute>
+          }
+        />
       </Route>
       <Route path="*" element={<Navigate to={token ? "/" : "/auth"} replace />} />
     </Routes>

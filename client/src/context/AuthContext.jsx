@@ -40,15 +40,33 @@ export const AuthProvider = ({ children }) => {
     loadCurrentUser();
   }, []);
 
+  useEffect(() => {
+    const handleSessionExpired = () => {
+      clearSession();
+    };
+
+    const handleTokenRefreshed = (event) => {
+      setToken(event.detail);
+    };
+
+    window.addEventListener("careerTracker:session-expired", handleSessionExpired);
+    window.addEventListener("careerTracker:token-refreshed", handleTokenRefreshed);
+
+    return () => {
+      window.removeEventListener("careerTracker:session-expired", handleSessionExpired);
+      window.removeEventListener("careerTracker:token-refreshed", handleTokenRefreshed);
+    };
+  }, []);
+
   const register = async (payload) => {
     const response = await apiClient.post("/auth/register", payload);
-    persistSession(response.data.token, response.data.user);
+    persistSession(response.data.accessToken || response.data.token, response.data.user);
     return response.data.user;
   };
 
   const login = async (payload) => {
     const response = await apiClient.post("/auth/login", payload);
-    persistSession(response.data.token, response.data.user);
+    persistSession(response.data.accessToken || response.data.token, response.data.user);
     return response.data.user;
   };
 
@@ -72,6 +90,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   const logout = () => {
+    apiClient.post("/auth/logout").catch(() => null);
     clearSession();
   };
 

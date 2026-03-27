@@ -20,12 +20,15 @@ const AppShell = () => {
             Dashboard
           </NavLink>
           <NavLink to="/profile">Profile</NavLink>
+          {user?.role === "admin" ? <NavLink to="/admin">Admin</NavLink> : null}
+          {user?.role === "reviewer" ? <NavLink to="/review">Reviewer</NavLink> : null}
         </nav>
 
         <div className="sidebar-footer">
           <p>Signed in as</p>
           <strong>{user?.name}</strong>
           <span>{user?.email}</span>
+          <span>Role: {user?.role || "student"}</span>
           <button type="button" className="ghost-button" onClick={logout}>
             Log out
           </button>

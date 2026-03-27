@@ -4,6 +4,8 @@ import {
   getCurrentUser,
   handleGoogleAuthSuccess,
   loginUser,
+  logoutUser,
+  refreshAccessToken,
   registerUser
 } from "../controllers/authController.js";
 import { protect } from "../middleware/authMiddleware.js";
@@ -12,6 +14,8 @@ const router = express.Router();
 
 router.post("/register", registerUser);
 router.post("/login", loginUser);
+router.post("/refresh", refreshAccessToken);
+router.post("/logout", logoutUser);
 router.get("/google", passport.authenticate("google", { scope: ["profile", "email"] }));
 router.get(
   "/google/callback",
