@@ -17,6 +17,9 @@ Node.js + Express + MongoDB backend for the Smart Internship & Career Tracker pr
 - admin dashboard route
 - reviewer queue route
 - analytics and reminders
+- rate limiting and brute-force protection
+- Helmet security headers
+- auth input validation
 - Swagger / OpenAPI documentation
 - RBAC test suite with Jest and Supertest
 
@@ -33,6 +36,16 @@ The backend uses:
   - sent to the browser as an HTTP-only cookie
 
 Refresh tokens are rotated on every refresh. If an old token is reused, all refresh tokens for that user are revoked.
+
+## Security Policies
+
+- global API limit: `100` requests per `15` minutes per IP
+- login/register limit: `10` requests per `15` minutes per IP
+- refresh-token limit: `20` requests per `15` minutes per IP
+- failed login protection:
+  - block the same IP for `15` minutes after `10` failed login attempts
+- Helmet is enabled for common HTTP security headers
+- login and register requests are validated before reaching the controller
 
 ## Environment
 

@@ -29,6 +29,14 @@ A full-stack internship management platform built with React, Node.js, Express, 
 - automatic access-token refresh on `401`
 - logout with refresh-token revocation
 
+### Security Hardening
+
+- global API rate limiting
+- stricter throttling on login, register, and refresh endpoints
+- brute-force login protection for repeated failed attempts
+- Helmet security headers
+- request validation for authentication endpoints
+
 ### Authorization
 
 - role-based authorization using:
@@ -86,6 +94,9 @@ A full-stack internship management platform built with React, Node.js, Express, 
 - cookie-parser
 - Multer
 - Nodemailer
+- express-rate-limit
+- helmet
+- express-validator
 - swagger-jsdoc
 - swagger-ui-express
 - Jest
@@ -120,6 +131,20 @@ The app uses two-token session management:
 6. If a revoked or reused refresh token is detected, all user refresh sessions are revoked.
 
 This mirrors enterprise identity platforms by separating short-lived API authorization from longer-lived session continuity.
+
+## API Security Policies
+
+- Global throttle: `100` requests per `15` minutes per IP
+- Auth throttle:
+  - `POST /api/auth/login` -> `10` requests per `15` minutes per IP
+  - `POST /api/auth/register` -> `10` requests per `15` minutes per IP
+  - `POST /api/auth/refresh` -> `20` requests per `15` minutes per IP
+- Brute-force login protection:
+  - after `10` failed login attempts from the same IP
+  - block that IP for `15` minutes
+- Validation:
+  - register requires `name`, `email`, and `password`
+  - login requires `email` and `password`
 
 ## RBAC Model
 
