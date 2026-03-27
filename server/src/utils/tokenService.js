@@ -2,8 +2,6 @@ import crypto from "crypto";
 import jwt from "jsonwebtoken";
 import RefreshToken from "../models/RefreshToken.js";
 
-const ACCESS_TOKEN_SECRET = process.env.ACCESS_TOKEN_SECRET || process.env.JWT_SECRET;
-const REFRESH_TOKEN_SECRET = process.env.REFRESH_TOKEN_SECRET || process.env.JWT_SECRET;
 const ACCESS_TOKEN_EXPIRES_IN = process.env.ACCESS_TOKEN_EXPIRES_IN || "15m";
 const REFRESH_TOKEN_EXPIRES_IN = process.env.REFRESH_TOKEN_EXPIRES_IN || "7d";
 const REFRESH_COOKIE_NAME = process.env.REFRESH_TOKEN_COOKIE_NAME || "careerTrackerRefreshToken";
@@ -30,7 +28,7 @@ export const createAccessToken = (user) =>
       userId: user._id,
       role: user.role
     },
-    ACCESS_TOKEN_SECRET,
+    process.env.ACCESS_TOKEN_SECRET || process.env.JWT_SECRET,
     { expiresIn: ACCESS_TOKEN_EXPIRES_IN }
   );
 
@@ -41,7 +39,7 @@ export const createRefreshToken = (user) =>
       role: user.role,
       type: "refresh"
     },
-    REFRESH_TOKEN_SECRET,
+    process.env.REFRESH_TOKEN_SECRET || process.env.JWT_SECRET,
     { expiresIn: REFRESH_TOKEN_EXPIRES_IN }
   );
 
@@ -89,9 +87,11 @@ export const clearRefreshTokenCookie = (res) => {
 
 export const getRefreshTokenFromRequest = (req) => req.cookies?.[REFRESH_COOKIE_NAME];
 
-export const verifyAccessToken = (token) => jwt.verify(token, ACCESS_TOKEN_SECRET);
+export const verifyAccessToken = (token) =>
+  jwt.verify(token, process.env.ACCESS_TOKEN_SECRET || process.env.JWT_SECRET);
 
-export const verifyRefreshToken = (token) => jwt.verify(token, REFRESH_TOKEN_SECRET);
+export const verifyRefreshToken = (token) =>
+  jwt.verify(token, process.env.REFRESH_TOKEN_SECRET || process.env.JWT_SECRET);
 
 export const issueAuthTokens = async (user) => {
   const accessToken = createAccessToken(user);

@@ -3,9 +3,6 @@ import jwt from "jsonwebtoken";
 import request from "supertest";
 import { jest } from "@jest/globals";
 
-process.env.JWT_SECRET = process.env.JWT_SECRET || "test-secret";
-process.env.ACCESS_TOKEN_SECRET = process.env.ACCESS_TOKEN_SECRET || "test-secret";
-
 const userStore = new Map([
   [
     "admin-1",
@@ -17,19 +14,33 @@ const userStore = new Map([
   ]
 ]);
 
+const createFindByIdQuery = (id) => ({
+  select: jest.fn(async () => userStore.get(String(id)) || null)
+});
+
 const UserModelMock = {
-  findById: jest.fn(async (id) => userStore.get(String(id)) || null)
+  findById: jest.fn((id) => createFindByIdQuery(id))
 };
 
 await jest.unstable_mockModule("../src/models/User.js", () => ({
   default: UserModelMock
 }));
-
-const { createAccessToken } = await import("../src/utils/tokenService.js");
-const { verifyJWT, authorizeRoles } = await import("../src/middleware/authMiddleware.js");
-const { errorHandler } = await import("../src/middleware/errorMiddleware.js");
+let createAccessToken;
+let verifyJWT;
+let authorizeRoles;
+let errorHandler;
 
 describe("JWT role validation", () => {
+  beforeAll(async () => {
+    process.env.JWT_SECRET = "test-secret";
+    process.env.ACCESS_TOKEN_SECRET = "test-secret";
+    process.env.REFRESH_TOKEN_SECRET = "test-secret";
+
+    ({ createAccessToken } = await import("../src/utils/tokenService.js"));
+    ({ verifyJWT, authorizeRoles } = await import("../src/middleware/authMiddleware.js"));
+    ({ errorHandler } = await import("../src/middleware/errorMiddleware.js"));
+  });
+
   it("includes the role in the JWT payload", () => {
     const token = createAccessToken({ _id: "admin-1", role: "admin" });
     const decoded = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
