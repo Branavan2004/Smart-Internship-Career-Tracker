@@ -1,63 +1,64 @@
 # Smart Internship & Career Tracker
 
-A full-stack web application that helps students manage internship applications, interview stages, company feedback, portfolio links, reminders, and profile assets in one place.
+A full-stack internship management platform built with React, Node.js, Express, and MongoDB. It helps students track internship applications, interview progress, notes, reminders, and profile assets, while also demonstrating production-style authentication and authorization patterns.
 
-This project is designed as a strong portfolio piece for software engineering internships because it demonstrates:
+## What This Project Demonstrates
 
-- frontend development with React
-- backend API development with Node.js and Express
-- authentication with JWT and bcrypt
-- database design with MongoDB
-- file upload handling
-- analytics dashboards and charts
-- deployment with Vercel and Render
+- React + Vite frontend development
+- Express + MongoDB backend API design
+- Google OAuth2 login with Passport.js
+- JWT-based authentication with access + refresh tokens
+- Role-Based Access Control (RBAC) with `student`, `admin`, and `reviewer`
+- HTTP-only cookie refresh-token sessions
+- Protected frontend routes and role-aware UI
+- File uploads with Multer
+- Analytics dashboards with Recharts
+- RBAC testing with Jest, Supertest, Vitest, and React Testing Library
+- Preflight validation scripts before pushing to production
 
-## Overview
+## Core Features
 
-Job hunting can get messy very quickly. Students often track applications in spreadsheets, interview schedules in calendars, notes in documents, and portfolio links in separate places. This project centralizes that workflow into one dashboard where users can:
+### Authentication and Session Management
 
-- create an account and log in securely
-- manage their profile and resume
-- add internship applications
-- record interview stages and outcomes
-- save notes and feedback for each company
-- track whether a company viewed their portfolio
-- view analytics on application progress
-- generate reminder summaries for upcoming follow-ups
+- email/password registration and login
+- Google OAuth2 login with Passport.js
+- short-lived access tokens for API calls
+- long-lived refresh tokens stored in MongoDB
+- refresh tokens sent as HTTP-only cookies
+- automatic access-token refresh on `401`
+- logout with refresh-token revocation
 
-## Features
+### Authorization
 
-### User Management
+- role-based authorization using:
+  - `student`
+  - `admin`
+  - `reviewer`
+- protected backend routes using `verifyJWT` and `authorizeRoles(...)`
+- protected frontend routes using role-aware route guards
+- admin-only dashboard route
+- reviewer-only review queue route
 
-- user registration and login
-- JWT-based protected routes
-- password hashing with bcrypt
-- editable profile with name, email, phone, skills, and resume support
+### Internship Tracking
 
-### Application Tracking
+- create and manage internship applications
+- track role, company, applied date, status, notes, and follow-up dates
+- manage interview stages and results
+- store portfolio links and track whether a portfolio was viewed
 
-- add company name, role, applied date, and role type
-- track statuses such as Pending, Interviewed, Accepted, Rejected, and Offer
-- manage interview stages like First Round, Technical Round, PM Round, and HR Round
-- store company-specific notes, feedback, rejection reasons, and follow-up dates
+### Profile and Resume Support
 
-### Portfolio and Resume Tracking
+- editable profile with name, email, phone, and skills
+- resume link support
+- resume file upload support
 
-- store portfolio links for each application
-- mark whether the portfolio was viewed
-- upload a resume file or save a resume link from the profile page
+### Analytics and Reminders
 
-### Analytics and Insights
-
-- application counts by status
-- success rate tracking
-- role-type breakdown
-- rejection reason visualization
-
-### Notifications and Reminders
-
-- reminder digest endpoint for upcoming follow-ups and interviews
-- simulated email sending using Nodemailer JSON transport
+- dashboard summaries for applications
+- application status breakdown
+- role-type distribution
+- rejection insights
+- reminder and follow-up summary endpoints
 
 ## Tech Stack
 
@@ -68,44 +69,100 @@ Job hunting can get messy very quickly. Students often track applications in spr
 - React Router
 - Axios
 - Recharts
+- Vitest
+- React Testing Library
 
 ### Backend
 
 - Node.js
 - Express.js
 - MongoDB with Mongoose
+- Passport.js
+- Google OAuth2 Strategy
 - JWT
 - bcryptjs
+- cookie-parser
 - Multer
 - Nodemailer
+- Jest
+- Supertest
 
 ## Project Structure
 
 ```text
 Smart-Internship-Career-Tracker/
-├── client/   React + Vite frontend
-├── server/   Express + MongoDB backend
+├── client/                  React frontend
+├── server/                  Express backend
+├── docs/                    validation notes and supporting docs
+├── rbac-check.sh            root RBAC preflight runner
 └── README.md
 ```
 
-## Frontend Highlights
+## Authentication Architecture
 
-The frontend lives inside `client/` and provides the user-facing application experience.
+The app uses two-token session management:
 
-- `AuthPage` handles login and signup
-- `DashboardPage` displays statistics, filters, charts, reminders, and application data
-- `ProfilePage` manages personal details, skills, and resume data
-- reusable components support forms, badges, tables, and dashboard cards
+1. The backend issues an access token with:
+   - `userId`
+   - `role`
+   - expiry of 15 minutes
+2. The backend also issues a refresh token with:
+   - expiry of 7 days
+   - storage in MongoDB as a hashed token record
+   - delivery to the browser as an HTTP-only cookie
+3. Protected API calls use the access token.
+4. When the access token expires, the frontend calls `POST /api/auth/refresh`.
+5. The server rotates the refresh token and returns a new access token.
+6. If a revoked or reused refresh token is detected, all user refresh sessions are revoked.
 
-## Backend Highlights
+This mirrors enterprise identity platforms by separating short-lived API authorization from longer-lived session continuity.
 
-The backend lives inside `server/` and provides the REST API for the app.
+## RBAC Model
 
-- authentication endpoints for register, login, and current user
-- protected profile route with resume upload support
-- application CRUD endpoints
-- analytics endpoint for dashboard summaries
-- reminder endpoints for weekly or upcoming action summaries
+### Student
+
+- manage personal applications
+- update profile
+- upload resume
+
+### Admin
+
+- access admin dashboard
+- view platform-level metrics
+
+### Reviewer
+
+- access reviewer queue
+- inspect applications assigned for review
+
+## Important API Routes
+
+### Authentication
+
+- `POST /api/auth/register`
+- `POST /api/auth/login`
+- `POST /api/auth/refresh`
+- `POST /api/auth/logout`
+- `GET /api/auth/google`
+- `GET /api/auth/google/callback`
+- `GET /api/auth/me`
+
+### RBAC Example Routes
+
+- `GET /api/admin/dashboard` -> admin only
+- `GET /api/applications` -> student only
+- `GET /api/review` -> reviewer only
+
+### Other App Routes
+
+- `GET /api/profile`
+- `PUT /api/profile`
+- `POST /api/applications`
+- `PUT /api/applications/:id`
+- `DELETE /api/applications/:id`
+- `GET /api/analytics`
+- `GET /api/reminders`
+- `POST /api/reminders/send`
 
 ## Environment Variables
 
@@ -125,8 +182,16 @@ Create `server/.env`:
 PORT=5001
 MONGODB_URI=mongodb://127.0.0.1:27017/career-tracker
 JWT_SECRET=replace-with-a-long-random-secret
+ACCESS_TOKEN_SECRET=replace-with-a-long-random-access-secret
+REFRESH_TOKEN_SECRET=replace-with-a-long-random-refresh-secret
+ACCESS_TOKEN_EXPIRES_IN=15m
+REFRESH_TOKEN_EXPIRES_IN=7d
+REFRESH_TOKEN_COOKIE_NAME=careerTrackerRefreshToken
 CLIENT_URL=http://localhost:5173
 EMAIL_FROM=no-reply@careertracker.dev
+GOOGLE_CLIENT_ID=replace-with-google-client-id
+GOOGLE_CLIENT_SECRET=replace-with-google-client-secret
+GOOGLE_CALLBACK_URL=http://localhost:5001/api/auth/google/callback
 ```
 
 ## Local Setup
@@ -140,7 +205,7 @@ npm install --prefix server
 
 ### 2. Start MongoDB
 
-Make sure MongoDB is running locally before starting the backend.
+Make sure MongoDB is running locally.
 
 ### 3. Start the backend
 
@@ -150,83 +215,109 @@ npm run dev:server
 
 ### 4. Start the frontend
 
-In a second terminal:
-
 ```bash
 npm run dev:client
 ```
 
 ### 5. Open the app
 
-- Frontend: `http://localhost:5173`
-- Backend health route: `http://localhost:5001/api/health`
+- frontend: `http://localhost:5173`
+- backend health route: `http://localhost:5001/api/health`
 
-## API Routes
+## Testing and RBAC Validation
 
-### Authentication
+### Backend tests
 
-- `POST /api/auth/register`
-- `POST /api/auth/login`
-- `GET /api/auth/me`
+```bash
+npm run test --prefix server
+```
 
-### Profile
+### Frontend tests
 
-- `GET /api/profile`
-- `PUT /api/profile`
+```bash
+npm run test --prefix client
+```
 
-### Applications
+### Seed RBAC test users
 
-- `GET /api/applications`
-- `POST /api/applications`
-- `PUT /api/applications/:id`
-- `DELETE /api/applications/:id`
+```bash
+npm run seed-test-users --prefix server
+```
 
-### Analytics
+This creates:
 
-- `GET /api/analytics`
+- `student@test.com`
+- `admin@test.com`
+- `reviewer@test.com`
 
-### Reminders
+### RBAC preflight
 
-- `GET /api/reminders`
-- `POST /api/reminders/send`
+Server:
 
-## Deployment
+```bash
+npm run rbac-preflight --prefix server
+```
 
-### Frontend on Vercel
+Client:
 
-- import the GitHub repo into Vercel
-- set the root directory to `client`
+```bash
+npm run rbac-preflight --prefix client
+```
+
+Root runner:
+
+```bash
+./rbac-check.sh
+```
+
+Optional auto-push after all checks pass:
+
+```bash
+./rbac-check.sh --auto-push
+```
+
+## Current Frontend Pages
+
+- `AuthPage` for login, signup, and Google sign-in
+- `GoogleAuthCallbackPage` for OAuth completion
+- `DashboardPage` for student application tracking
+- `ProfilePage` for profile and resume updates
+- `AdminDashboardPage` for admin-only metrics
+- `ReviewQueuePage` for reviewer-only access
+
+## Why This Architecture Matters
+
+This project now goes beyond basic CRUD. It demonstrates:
+
+- authentication
+- authorization
+- role-based route protection
+- secure session management
+- refresh-token rotation
+- defensive token revocation
+- backend and frontend access-control testing
+
+That makes it much closer to how real internal tools and enterprise identity-aware apps are built.
+
+## Deployment Notes
+
+### Frontend
+
 - build command: `npm run build`
 - output directory: `dist`
-- add `VITE_API_URL` with your deployed backend API URL
+- set `VITE_API_URL` to the deployed backend API
 
-### Backend on Render
+### Backend
 
-- create a new Web Service from the same GitHub repo
-- set the root directory to `server`
 - build command: `npm install`
 - start command: `npm run start`
-- add environment variables for `MONGODB_URI`, `JWT_SECRET`, `CLIENT_URL`, and `EMAIL_FROM`
-
-## Why This Project Is Strong for a Portfolio
-
-This project is more than a basic CRUD app. It shows the ability to design and build a complete product with:
-
-- a responsive frontend
-- protected authentication flows
-- real backend business logic
-- structured database models
-- file handling
-- chart-based analytics
-- deployment-ready configuration
-
-It is easy to explain in interviews because it solves a real student problem while also showing full-stack engineering skills.
+- configure all backend auth environment variables
+- enable secure cookies in production using HTTPS
 
 ## Future Improvements
 
-- add form validation with `zod` or `yup`
-- add test coverage for frontend and backend
-- add real email delivery instead of simulated transport
-- add company enrichment APIs
-- add admin reporting or recruiter-facing insights
-- add screenshot previews and a live demo link
+- add Redis-backed token/session introspection
+- add audit logs for role changes and refresh-token reuse events
+- add email verification and password reset flow
+- add Swagger/OpenAPI documentation
+- add refresh-token tests that exercise real cookie handling end to end
