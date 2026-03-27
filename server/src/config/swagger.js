@@ -97,6 +97,25 @@ export const swaggerSpec = swaggerJsdoc({
             message: {
               type: "string",
               example: "Forbidden. You do not have permission to access this resource."
+            },
+            errors: {
+              type: "array",
+              items: {
+                type: "object",
+                properties: {
+                  field: { type: "string", example: "email" },
+                  message: { type: "string", example: "Email must be valid." }
+                }
+              }
+            }
+          }
+        },
+        RateLimitResponse: {
+          type: "object",
+          properties: {
+            message: {
+              type: "string",
+              example: "Too many authentication requests from this IP. Please try again in 15 minutes."
             }
           }
         },

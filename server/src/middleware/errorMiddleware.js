@@ -9,6 +9,7 @@ export const errorHandler = (error, _req, res, _next) => {
 
   res.status(statusCode).json({
     message: error.message || "Unexpected server error",
+    errors: error.details,
     stack:
       process.env.NODE_ENV === "production" ? "hidden in production" : error.stack
   });

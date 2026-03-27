@@ -9,6 +9,13 @@ import {
   registerUser
 } from "../controllers/authController.js";
 import { protect } from "../middleware/authMiddleware.js";
+import {
+  authLimiter,
+  loginBruteForceLimiter,
+  refreshTokenLimiter
+} from "../middleware/rateLimiter.js";
+import { handleValidationErrors } from "../middleware/validationMiddleware.js";
+import { loginValidationRules, registerValidationRules } from "../validators/authValidators.js";
 
 const router = express.Router();
 
@@ -44,8 +51,14 @@ const router = express.Router();
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
+ *       429:
+ *         description: Too many registration attempts from this IP.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/RateLimitResponse'
  */
-router.post("/register", registerUser);
+router.post("/register", authLimiter, registerValidationRules, handleValidationErrors, registerUser);
 
 /**
  * @openapi
@@ -73,8 +86,14 @@ router.post("/register", registerUser);
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
+ *       429:
+ *         description: Too many login or failed-login attempts from this IP.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/RateLimitResponse'
  */
-router.post("/login", loginUser);
+router.post("/login", authLimiter, loginBruteForceLimiter, loginValidationRules, handleValidationErrors, loginUser);
 
 /**
  * @openapi
@@ -97,8 +116,14 @@ router.post("/login", loginUser);
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
+ *       429:
+ *         description: Too many refresh requests from this IP.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/RateLimitResponse'
  */
-router.post("/refresh", refreshAccessToken);
+router.post("/refresh", refreshTokenLimiter, refreshAccessToken);
 
 /**
  * @openapi
