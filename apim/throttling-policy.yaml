@@ -1,0 +1,32 @@
+throttlingPolicies:
+  - name: GlobalPolicy
+    description: "Standard rate limit: 100 requests every 15 minutes"
+    unitTime: 15
+    timeUnit: min
+    count: 100
+    type: APILevel
+
+  - name: AuthPolicy
+    description: "Strict limit for login and registration: 10 requests every 15 minutes"
+    unitTime: 15
+    timeUnit: min
+    count: 10
+    type: ResourceLevel
+
+  - name: RefreshPolicy
+    description: "Limit for token refresh: 20 requests every 15 minutes"
+    unitTime: 15
+    timeUnit: min
+    count: 20
+    type: ResourceLevel
+
+  - name: BruteForcePolicy
+    description: "Block after 10 failed attempts within 15 minutes"
+    unitTime: 15
+    timeUnit: min
+    count: 10
+    type: SubscriptionLevel
+    stopOnQuotaReach: true
+    conditions:
+      - HttpStatus: 401
+      - HttpStatus: 403

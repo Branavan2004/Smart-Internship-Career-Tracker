@@ -1,0 +1,69 @@
+apiConfig:
+  name: SmartInternshipCareerTracker
+  version: v1.0
+  context: /smart-tracker
+  type: HTTP
+  visibility: PUBLIC
+  transports:
+    - http
+    - https
+  tiers:
+    - Unlimited
+    - 10PerMin
+    - 20PerMin
+  endpointConfig:
+    production_endpoints:
+      url: http://localhost:5001
+      config: null
+    sandbox_endpoints:
+      url: http://localhost:5001
+      config: null
+    endpoint_type: http
+  tags:
+    - career-tracker
+    - internship
+    - management
+  authType: Application & Application User
+  swaggerDefinition: ./openapi.yaml
+
+operations:
+  - target: /api/auth/register
+    verb: POST
+    authType: Application & Application User
+    throttlingTier: 10PerMin
+  - target: /api/auth/login
+    verb: POST
+    authType: Application & Application User
+    throttlingTier: 10PerMin
+  - target: /api/auth/refresh
+    verb: POST
+    authType: Application & Application User
+    throttlingTier: 20PerMin
+  - target: /api/auth/*
+    verb: ANY
+    authType: Application & Application User
+    throttlingTier: Unlimited
+  - target: /api/applications/*
+    verb: ANY
+    authType: Application & Application User
+    throttlingTier: Unlimited
+  - target: /api/profile
+    verb: ANY
+    authType: Application & Application User
+    throttlingTier: Unlimited
+  - target: /api/analytics
+    verb: GET
+    authType: Application & Application User
+    throttlingTier: Unlimited
+  - target: /api/reminders/*
+    verb: ANY
+    authType: Application & Application User
+    throttlingTier: Unlimited
+  - target: /api/admin/*
+    verb: ANY
+    authType: Application & Application User
+    throttlingTier: Unlimited
+  - target: /api/review
+    verb: GET
+    authType: Application & Application User
+    throttlingTier: Unlimited
