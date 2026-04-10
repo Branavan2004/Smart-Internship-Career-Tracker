@@ -1,0 +1,7 @@
+endpoints:
+  - name: Backend API
+    port: 5000
+    type: REST
+    context: /api
+    networkVisibility: Public
+    schemaFilePath: ../apim/openapi.yaml

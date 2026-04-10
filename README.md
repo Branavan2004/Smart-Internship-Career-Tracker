@@ -232,16 +232,27 @@ ASGARDEO_TENANT=your-tenant-name
 ASGARDEO_CALLBACK_URL=http://localhost:5001/api/auth/asgardeo/callback
 ```
 
-## WSO2 API Manager
+## Docker & Choreo
 
-This project is aligned with WSO2 API Manager standards for enterprise-grade API management and governance.
+This project is containerized for easy local development and automated deployment via **Choreo**.
 
-- **OpenAPI 3.0 Spec**: A comprehensive `openapi.yaml` is provided in the `apim/` directory.
-- **API Governance**: Configured for WSO2 APIM Publisher with `api-config.yaml`.
-- **Throttling Policies**: Ready-to-import policies mapping Express rate limits (Global, Auth, Refresh) to APIM tiers.
-- **Identity Integration**: Compatible with Asgardeo as a Key Manager for OIDC-based security.
+### Local Development with Docker
+Run the entire stack (Frontend, Backend, MongoDB) using Docker Compose:
 
-Refer to the [WSO2 APIM README](apim/README.md) for detailed import and configuration instructions.
+```bash
+docker-compose up --build
+```
+- **Frontend**: http://localhost:3000
+- **Backend**: http://localhost:5000
+- **MongoDB**: http://localhost:27017
+
+### Choreo Deployment
+The repository includes `.choreo/` configuration for seamless deployment:
+
+1. **Connect Repository**: Connect this GitHub repository to your Choreo Project.
+2. **Component Configuration**: Choreo automatically detects `.choreo/component.yaml` to configure the NodeJS build and start commands.
+3. **API Exposure**: The `.choreo/endpoints.yaml` file exposes the backend service as a Public REST API.
+4. **API Integration**: The Choreo endpoint links directly to `apim/openapi.yaml`, ensuring that the deployed API matches the WSO2 APIM standard defined in the project.
 
 ## Local Setup
 

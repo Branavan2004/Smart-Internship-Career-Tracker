@@ -1,0 +1,9 @@
+schemaVersion: 1.0
+name: smart-internship-tracker-backend
+type: Service
+buildPack: NodeJS
+language: JavaScript
+languageVersion: "18"
+port: 5000
+buildCommand: npm ci
+startCommand: node src/server.js
