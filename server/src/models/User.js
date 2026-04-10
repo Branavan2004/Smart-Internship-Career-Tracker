@@ -13,6 +13,11 @@ const userSchema = new mongoose.Schema(
       unique: true,
       sparse: true
     },
+    asgardeoId: {
+      type: String,
+      unique: true,
+      sparse: true
+    },
     email: {
       type: String,
       required: true,

@@ -94,6 +94,14 @@ export const handleGoogleAuthSuccess = asyncHandler(async (req, res) => {
   res.redirect(redirectUrl);
 });
 
+export const handleAsgardeoAuthSuccess = asyncHandler(async (req, res) => {
+  const { accessToken, refreshToken } = await issueAuthTokens(req.user);
+  setRefreshTokenCookie(res, refreshToken);
+  const redirectUrl = `${process.env.CLIENT_URL || "http://localhost:5173"}/auth/callback?token=${accessToken}`;
+
+  res.redirect(redirectUrl);
+});
+
 export const refreshAccessToken = asyncHandler(async (req, res) => {
   const refreshToken = getRefreshTokenFromRequest(req);
 

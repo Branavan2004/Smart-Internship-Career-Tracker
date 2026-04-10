@@ -225,7 +225,23 @@ EMAIL_FROM=no-reply@careertracker.dev
 GOOGLE_CLIENT_ID=replace-with-google-client-id
 GOOGLE_CLIENT_SECRET=replace-with-google-client-secret
 GOOGLE_CALLBACK_URL=http://localhost:5001/api/auth/google/callback
+ASGARDEO_CLIENT_ID=replace-with-asgardeo-client-id
+ASGARDEO_CLIENT_SECRET=replace-with-asgardeo-client-secret
+ASGARDEO_BASE_URL=https://api.asgardeo.io/t/{your-tenant-name}
+ASGARDEO_TENANT=your-tenant-name
+ASGARDEO_CALLBACK_URL=http://localhost:5001/api/auth/asgardeo/callback
 ```
+
+## Asgardeo Setup
+
+The app now supports Asgardeo OpenID Connect in addition to Google OAuth.
+
+1. Create a tenant in WSO2 Asgardeo.
+2. Register a new Standard-Based Application.
+3. Select "OpenID Connect" and check `Code` under Allowed Grant Types.
+4. Set Authorized Redirect URI to `http://localhost:5001/api/auth/asgardeo/callback`.
+5. Under User Attributes, configure user email, name and groups to be returned in the ID Token.
+6. The app maps Asgardeo groups (`admin` or `reviewer`) directly to system roles. If no matching group is found, it defaults to `student`.
 
 ## Local Setup
 

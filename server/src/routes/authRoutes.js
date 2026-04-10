@@ -3,12 +3,15 @@ import passport from "passport";
 import {
   getCurrentUser,
   handleGoogleAuthSuccess,
+  handleAsgardeoAuthSuccess,
   loginUser,
   logoutUser,
   refreshAccessToken,
   registerUser
 } from "../controllers/authController.js";
 import { protect } from "../middleware/authMiddleware.js";
+import { isGoogleOAuthConfigured } from "../config/passport.js";
+import { isAsgardeoConfigured } from "../config/asgardeo.js";
 import {
   authLimiter,
   loginBruteForceLimiter,
@@ -18,6 +21,26 @@ import { handleValidationErrors } from "../middleware/validationMiddleware.js";
 import { loginValidationRules, registerValidationRules } from "../validators/authValidators.js";
 
 const router = express.Router();
+
+const handleGoogleOAuthUnavailable = (req, res, next) => {
+  if (isGoogleOAuthConfigured) {
+    return next();
+  }
+
+  return res.status(503).json({
+    message: "Google OAuth is not configured on this server."
+  });
+};
+
+const handleAsgardeoOAuthUnavailable = (req, res, next) => {
+  if (isAsgardeoConfigured) {
+    return next();
+  }
+
+  return res.status(503).json({
+    message: "Asgardeo OIDC is not configured on this server."
+  });
+};
 
 /**
  * @openapi
@@ -153,14 +176,45 @@ router.post("/logout", logoutUser);
  *       302:
  *         description: Redirects the browser to Google OAuth consent.
  */
-router.get("/google", passport.authenticate("google", { scope: ["profile", "email"] }));
+router.get(
+  "/google",
+  handleGoogleOAuthUnavailable,
+  passport.authenticate("google", { scope: ["profile", "email"] })
+);
 router.get(
   "/google/callback",
+  handleGoogleOAuthUnavailable,
   passport.authenticate("google", { session: false, failureRedirect: "/api/auth/google/failure" }),
   handleGoogleAuthSuccess
 );
 router.get("/google/failure", (_req, res) => {
   res.redirect(`${process.env.CLIENT_URL || "http://localhost:5173"}/auth?error=google-login-failed`);
+});
+
+/**
+ * @openapi
+ * /api/auth/asgardeo:
+ *   get:
+ *     summary: Start Asgardeo OIDC login.
+ *     tags:
+ *       - Authentication
+ *     responses:
+ *       302:
+ *         description: Redirects the browser to Asgardeo consent.
+ */
+router.get(
+  "/asgardeo",
+  handleAsgardeoOAuthUnavailable,
+  passport.authenticate("asgardeo", { scope: ["openid", "profile", "email", "groups"] })
+);
+router.get(
+  "/asgardeo/callback",
+  handleAsgardeoOAuthUnavailable,
+  passport.authenticate("asgardeo", { failureRedirect: "/api/auth/asgardeo/failure" }),
+  handleAsgardeoAuthSuccess
+);
+router.get("/asgardeo/failure", (_req, res) => {
+  res.redirect(`${process.env.CLIENT_URL || "http://localhost:5173"}/auth?error=asgardeo-login-failed`);
 });
 
 /**

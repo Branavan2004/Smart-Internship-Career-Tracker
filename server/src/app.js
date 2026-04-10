@@ -8,6 +8,7 @@ import passport from "passport";
 import path from "path";
 import swaggerUi from "swagger-ui-express";
 import { fileURLToPath } from "url";
+import session from "express-session";
 import "./config/passport.js";
 import { swaggerSpec } from "./config/swagger.js";
 import analyticsRoutes from "./routes/analyticsRoutes.js";
@@ -45,7 +46,16 @@ app.use(cookieParser());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(morgan("dev"));
+
+app.use(
+  session({
+    secret: process.env.JWT_SECRET || "fallback_session_secret",
+    resave: false,
+    saveUninitialized: false,
+  })
+);
 app.use(passport.initialize());
+app.use(passport.session());
 app.use("/uploads", express.static(path.join(__dirname, "../uploads")));
 app.use(globalApiLimiter);
 
