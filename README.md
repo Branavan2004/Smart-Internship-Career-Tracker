@@ -232,16 +232,16 @@ ASGARDEO_TENANT=your-tenant-name
 ASGARDEO_CALLBACK_URL=http://localhost:5001/api/auth/asgardeo/callback
 ```
 
-## Asgardeo Setup
+## WSO2 API Manager
 
-The app now supports Asgardeo OpenID Connect in addition to Google OAuth.
+This project is aligned with WSO2 API Manager standards for enterprise-grade API management and governance.
 
-1. Create a tenant in WSO2 Asgardeo.
-2. Register a new Standard-Based Application.
-3. Select "OpenID Connect" and check `Code` under Allowed Grant Types.
-4. Set Authorized Redirect URI to `http://localhost:5001/api/auth/asgardeo/callback`.
-5. Under User Attributes, configure user email, name and groups to be returned in the ID Token.
-6. The app maps Asgardeo groups (`admin` or `reviewer`) directly to system roles. If no matching group is found, it defaults to `student`.
+- **OpenAPI 3.0 Spec**: A comprehensive `openapi.yaml` is provided in the `apim/` directory.
+- **API Governance**: Configured for WSO2 APIM Publisher with `api-config.yaml`.
+- **Throttling Policies**: Ready-to-import policies mapping Express rate limits (Global, Auth, Refresh) to APIM tiers.
+- **Identity Integration**: Compatible with Asgardeo as a Key Manager for OIDC-based security.
+
+Refer to the [WSO2 APIM README](apim/README.md) for detailed import and configuration instructions.
 
 ## Local Setup
 
