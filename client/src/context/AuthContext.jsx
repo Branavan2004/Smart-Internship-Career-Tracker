@@ -1,27 +1,25 @@
 import { createContext, useEffect, useState } from "react";
+import { useAuthContext } from "@asgardeo/auth-react";
 import apiClient from "../api/apiClient";
 
 export const AuthContext = createContext(null);
 
 export const AuthProvider = ({ children }) => {
-  const [token, setToken] = useState(localStorage.getItem("careerTrackerToken"));
+  const { 
+    state, 
+    signIn, 
+    signOut, 
+    getAccessToken, 
+    getBasicUserInfo,
+    on 
+  } = useAuthContext();
+
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  const persistSession = (authToken, currentUser) => {
-    localStorage.setItem("careerTrackerToken", authToken);
-    setToken(authToken);
-    setUser(currentUser);
-  };
-
-  const clearSession = () => {
-    localStorage.removeItem("careerTrackerToken");
-    setToken(null);
-    setUser(null);
-  };
-
+  // Sync user profile from backend when authenticated
   const loadCurrentUser = async () => {
-    if (!localStorage.getItem("careerTrackerToken")) {
+    if (!state.isAuthenticated) {
       setLoading(false);
       return;
     }
@@ -30,68 +28,28 @@ export const AuthProvider = ({ children }) => {
       const response = await apiClient.get("/auth/me");
       setUser(response.data.user);
     } catch (_error) {
-      clearSession();
+      // If backend fails but SDK is authenticated, we might have a sync issue
+      // but we shouldn't force sign out here unless necessary
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    loadCurrentUser();
-  }, []);
-
-  useEffect(() => {
-    const handleSessionExpired = () => {
-      clearSession();
-    };
-
-    const handleTokenRefreshed = (event) => {
-      setToken(event.detail);
-    };
-
-    window.addEventListener("careerTracker:session-expired", handleSessionExpired);
-    window.addEventListener("careerTracker:token-refreshed", handleTokenRefreshed);
-
-    return () => {
-      window.removeEventListener("careerTracker:session-expired", handleSessionExpired);
-      window.removeEventListener("careerTracker:token-refreshed", handleTokenRefreshed);
-    };
-  }, []);
-
-  const register = async (payload) => {
-    const response = await apiClient.post("/auth/register", payload);
-    persistSession(response.data.accessToken || response.data.token, response.data.user);
-    return response.data.user;
-  };
-
-  const login = async (payload) => {
-    const response = await apiClient.post("/auth/login", payload);
-    persistSession(response.data.accessToken || response.data.token, response.data.user);
-    return response.data.user;
-  };
-
-  const completeOAuthLogin = async (authToken) => {
-    localStorage.setItem("careerTrackerToken", authToken);
-    setToken(authToken);
-
-    try {
-      const response = await apiClient.get("/auth/me", {
-        headers: {
-          Authorization: `Bearer ${authToken}`
-        }
-      });
-
-      setUser(response.data.user);
-      return response.data.user;
-    } catch (error) {
-      clearSession();
-      throw error;
+    if (state.isAuthenticated) {
+      loadCurrentUser();
+    } else {
+      setUser(null);
+      setLoading(state.isLoading);
     }
+  }, [state.isAuthenticated, state.isLoading]);
+
+  const login = async () => {
+    await signIn();
   };
 
-  const logout = () => {
-    apiClient.post("/auth/logout").catch(() => null);
-    clearSession();
+  const logout = async () => {
+    await signOut();
   };
 
   const updateUser = (nextUser) => {
@@ -101,15 +59,14 @@ export const AuthProvider = ({ children }) => {
   return (
     <AuthContext.Provider
       value={{
-        token,
+        token: state.accessToken, // Provided by SDK
         user,
         loading,
-        register,
+        isAuthenticated: state.isAuthenticated,
         login,
-        completeOAuthLogin,
         logout,
-        loadCurrentUser,
-        updateUser
+        updateUser,
+        getAccessToken // Exporting for SessionManager
       }}
     >
       {children}

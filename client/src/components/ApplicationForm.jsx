@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   emptyApplication,
   interviewResultOptions,
@@ -17,7 +17,20 @@ const createStage = () => ({
 const ApplicationForm = ({ initialValues, onSubmit, onCancel, saving }) => {
   const [formData, setFormData] = useState(emptyApplication);
 
+  // Bug #8: Comparing the whole initialValues object causes the effect to fire on
+  // every parent render (new object reference each time). Instead, we key the reset
+  // on the stable _id string — this only re-runs when a genuinely different
+  // application is opened for editing, preserving in-progress form edits otherwise.
+  const editingId = initialValues?._id ?? null;
+  const prevEditingIdRef = useRef(editingId);
+
   useEffect(() => {
+    // Only reset the form when _id actually changes (or flips null ↔ non-null)
+    if (editingId === prevEditingIdRef.current) {
+      return;
+    }
+    prevEditingIdRef.current = editingId;
+
     if (initialValues) {
       setFormData({
         ...emptyApplication,
@@ -29,11 +42,10 @@ const ApplicationForm = ({ initialValues, onSubmit, onCancel, saving }) => {
           date: stage.date?.slice(0, 10) || ""
         }))
       });
-      return;
+    } else {
+      setFormData(emptyApplication);
     }
-
-    setFormData(emptyApplication);
-  }, [initialValues]);
+  });
 
   const handleChange = (event) => {
     const { name, value, type, checked } = event.target;

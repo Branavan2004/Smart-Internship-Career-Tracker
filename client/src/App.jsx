@@ -9,6 +9,8 @@ import DashboardPage from "./pages/DashboardPage";
 import GoogleAuthCallbackPage from "./pages/GoogleAuthCallbackPage";
 import ProfilePage from "./pages/ProfilePage";
 import ReviewQueuePage from "./pages/ReviewQueuePage";
+import SessionManager from "./components/SessionManager";
+import RateLimitBanner from "./components/RateLimitBanner";
 
 const App = () => {
   const { token, loading } = useAuth();
@@ -19,6 +21,8 @@ const App = () => {
 
   return (
     <ToastProvider>
+      <SessionManager />
+      <RateLimitBanner />
       <Routes>
         <Route path="/auth" element={token ? <Navigate to="/" replace /> : <AuthPage />} />
         <Route path="/auth/callback" element={<GoogleAuthCallbackPage />} />

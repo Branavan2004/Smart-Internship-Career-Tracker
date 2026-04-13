@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import apiClient from "../api/apiClient";
 import { useAuth } from "../hooks/useAuth";
 
@@ -13,8 +13,11 @@ const ProfilePage = () => {
     weeklyDigestEnabled: true
   });
   const [resumeFile, setResumeFile] = useState(null);
-  const [message, setMessage] = useState("");
+  // Bug #2 / #10: Separate success and error messages with auto-clear on success
+  const [successMessage, setSuccessMessage] = useState("");
+  const [errorMessage, setErrorMessage] = useState("");
   const [saving, setSaving] = useState(false);
+  const successTimerRef = useRef(null);
 
   useEffect(() => {
     if (!user) {
@@ -31,6 +34,13 @@ const ProfilePage = () => {
     });
   }, [user]);
 
+  // Clean up the auto-clear timer on unmount
+  useEffect(() => {
+    return () => {
+      if (successTimerRef.current) clearTimeout(successTimerRef.current);
+    };
+  }, []);
+
   const handleChange = (event) => {
     const { name, value, type, checked } = event.target;
     setFormData((current) => ({
@@ -42,7 +52,8 @@ const ProfilePage = () => {
   const handleSubmit = async (event) => {
     event.preventDefault();
     setSaving(true);
-    setMessage("");
+    setSuccessMessage("");
+    setErrorMessage("");
 
     try {
       const payload = new FormData();
@@ -59,8 +70,15 @@ const ProfilePage = () => {
       });
 
       updateUser(response.data.user);
-      setMessage("Profile saved successfully.");
       setResumeFile(null);
+      setSuccessMessage("Profile saved successfully.");
+
+      // Bug #10: Auto-clear the success banner after 4 seconds
+      if (successTimerRef.current) clearTimeout(successTimerRef.current);
+      successTimerRef.current = setTimeout(() => setSuccessMessage(""), 4000);
+    } catch (error) {
+      // Bug #2: Catch block now correctly surfaces API errors to the user
+      setErrorMessage(error.response?.data?.message || "Could not save profile. Please try again.");
     } finally {
       setSaving(false);
     }
@@ -121,7 +139,8 @@ const ProfilePage = () => {
           </button>
         </form>
 
-        {message ? <p className="success-text">{message}</p> : null}
+        {successMessage ? <p className="success-text">{successMessage}</p> : null}
+        {errorMessage ? <p className="error-text">{errorMessage}</p> : null}
       </section>
     </div>
   );

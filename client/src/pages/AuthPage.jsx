@@ -2,18 +2,23 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
 
+const emptyForm = { name: "", email: "", password: "" };
+
 const AuthPage = () => {
   const navigate = useNavigate();
   const { login, register } = useAuth();
   const [mode, setMode] = useState("login");
-  const [formData, setFormData] = useState({
-    name: "",
-    email: "",
-    password: ""
-  });
+  const [formData, setFormData] = useState(emptyForm);
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const googleLoginUrl = `${import.meta.env.VITE_API_URL || "http://localhost:5001/api"}/auth/google`;
+
+  // Bug #7: Clear form fields and error when switching between Login / Sign-up
+  const switchMode = (nextMode) => {
+    setMode(nextMode);
+    setFormData(emptyForm);
+    setError("");
+  };
 
   const handleChange = (event) => {
     const { name, value } = event.target;
@@ -55,10 +60,10 @@ const AuthPage = () => {
 
       <section className="auth-card">
         <div className="mode-switch">
-          <button type="button" className={mode === "login" ? "active-tab" : ""} onClick={() => setMode("login")}>
+          <button type="button" className={mode === "login" ? "active-tab" : ""} onClick={() => switchMode("login")}>
             Login
           </button>
-          <button type="button" className={mode === "signup" ? "active-tab" : ""} onClick={() => setMode("signup")}>
+          <button type="button" className={mode === "signup" ? "active-tab" : ""} onClick={() => switchMode("signup")}>
             Sign up
           </button>
         </div>
