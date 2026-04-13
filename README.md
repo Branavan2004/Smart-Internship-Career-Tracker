@@ -4,7 +4,7 @@ A production-grade full-stack internship management platform built with React, N
 
 ## What This Project Demonstrates
 
-- **Modern Frontend**: React + Vite with role-aware UIs and analytics dashboards.
+- **Modern Frontend**: React + Vite with role-aware UIs, analytics dashboards, and Kanban-style pipeline tracking.
 - **Robust Backend**: Node.js/Express API with MongoDB and Mongoose.
 - **Enterprise Identity**: Multi-provider auth using Google OAuth2 and **WSO2 Asgardeo (OIDC)**.
 - **API Governance**: Complete **WSO2 API Manager** integration with OpenAPI 3.0 specs and throttling policies.
@@ -19,15 +19,16 @@ A production-grade full-stack internship management platform built with React, N
 - **Google OAuth2**: Social login integrated via Passport.js.
 - **Asgardeo OIDC**: Enterprise-grade identity management with OpenID Connect discovery via `openid-client`.
 - **Identity Model**: User profiles support multi-identity mapping (e.g., `googleId`, `asgardeoId`).
-- **Session Management**: Short-lived JWT access tokens and long-lived refresh tokens in HTTP-only cookies.
+- **Session Management**: Enterprise-grade session awareness featuring silent token refreshes, proactive 2-minute expiry warnings, and secure lock-out screens using the `@asgardeo/auth-react` SDK.
 
 ### Security and Governance
 - **API Management**: Managed via WSO2 API Manager with dedicated throttling tiers.
-- **Rate Limiting**: Multi-layered protection (Global, Auth, and Brute-force limiters).
+- **Rate-Limiting & Feedback**: Multi-layered backend protection mapped to a smart front-end interceptor that handles APIM 429 errors using exponential backoff, accompanied by visual countdown banners and context-aware APIM quota indicators.
 - **Hardening**: Helmet security headers and comprehensive request validation.
 
 ### Internship Management
-- Full CRUD for internship applications (Role, Company, Status, Notes).
+- Full CRUD for internship applications seamlessly integrated with optimistic UI updates for instant feedback and fail-safe API rollbacks.
+- **Kanban Board**: Interactive drag-and-drop board (via `@hello-pangea/dnd`) for tracking application pipelines visually, available alongside the classic data table.
 - Tracking of portfolio views and interview stages.
 - Profile management with resume upload support via Multer.
 - Analytics dashboard and automated reminder summaries.
