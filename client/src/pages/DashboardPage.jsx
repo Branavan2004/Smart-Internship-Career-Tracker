@@ -17,6 +17,8 @@ import ApplicationsTable from "../components/ApplicationsTable";
 import EmptyState from "../components/EmptyState";
 import StatCard from "../components/StatCard";
 import { emptyApplication, roleTypeOptions, statusOptions } from "../utils/constants";
+import { useToast } from "../context/ToastContext";
+import { recalculateAnalytics } from "../utils/analyticsHelper";
 
 const chartColors = ["#ff7a59", "#ffb347", "#5ec4ff", "#24b47e", "#f15bb5", "#6a4c93"];
 
@@ -50,14 +52,7 @@ const DashboardPage = () => {
   const [editingApplication, setEditingApplication] = useState(null);
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(true);
-
-  // Bug #3: Separate success/error messages so colours are always correct
-  const [successMessage, setSuccessMessage] = useState("");
-  const [errorMessage, setErrorMessage] = useState("");
-
-  const showSuccess = (msg) => { setSuccessMessage(msg); setErrorMessage(""); };
-  const showError = (msg) => { setErrorMessage(msg); setSuccessMessage(""); };
-  const clearMessages = () => { setSuccessMessage(""); setErrorMessage(""); };
+  const { showToast } = useToast();
 
   const loadDashboard = async (searchOverride) => {
     setLoading(true);
@@ -81,7 +76,7 @@ const DashboardPage = () => {
       setAnalytics(analyticsResponse.data);
       setReminders(reminderResponse.data);
     } catch (error) {
-      showError(error.response?.data?.message || "Could not refresh dashboard data.");
+      showToast(error.response?.data?.message || "Could not refresh dashboard data.", "error");
     } finally {
       setLoading(false);
     }
@@ -110,24 +105,64 @@ const DashboardPage = () => {
   };
 
   const handleSaveApplication = async (payload) => {
+    const isEditing = !!editingApplication?._id;
     setSaving(true);
-    clearMessages();
+
+    let previousApplications = null;
+    let previousAnalytics = null;
+
+    if (isEditing) {
+      // Optimistic update for edits
+      previousApplications = [...applications];
+      previousAnalytics = { ...analytics };
+
+      const updatedApps = applications.map((app) => 
+        app._id === editingApplication._id ? { ...app, ...payload } : app
+      );
+      setApplications(updatedApps);
+      setAnalytics(recalculateAnalytics(updatedApps));
+    }
 
     try {
-      if (editingApplication?._id) {
+      if (isEditing) {
         await apiClient.put(`/applications/${editingApplication._id}`, payload);
-        showSuccess("Application updated.");
+        showToast("Application updated.");
       } else {
         await apiClient.post("/applications", payload);
-        showSuccess("Application added.");
+        showToast("Application added.");
       }
 
       setEditingApplication(null);
       await loadDashboard();
     } catch (error) {
-      showError(error.response?.data?.message || "Could not save application.");
+      if (isEditing) {
+        setApplications(previousApplications);
+        setAnalytics(previousAnalytics);
+      }
+      showToast(error.response?.data?.message || "Could not save application.", "error");
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleStatusChange = async (applicationId, newStatus) => {
+    const previousApplications = [...applications];
+    const previousAnalytics = { ...analytics };
+
+    // Optimistically update
+    const updatedApps = applications.map((app) => 
+      app._id === applicationId ? { ...app, status: newStatus } : app
+    );
+    setApplications(updatedApps);
+    setAnalytics(recalculateAnalytics(updatedApps));
+
+    try {
+      await apiClient.patch(`/applications/${applicationId}`, { status: newStatus });
+      showToast(`Status updated to ${newStatus}`);
+    } catch (error) {
+      setApplications(previousApplications);
+      setAnalytics(previousAnalytics);
+      showToast("Failed to update status. Changes reverted.", "error");
     }
   };
 
@@ -136,15 +171,21 @@ const DashboardPage = () => {
       return;
     }
 
+    const previousApplications = [...applications];
+    const previousAnalytics = { ...analytics };
+
+    // Optimistically update
+    const updatedApps = applications.filter((app) => app._id !== applicationId);
+    setApplications(updatedApps);
+    setAnalytics(recalculateAnalytics(updatedApps));
+
     try {
       await apiClient.delete(`/applications/${applicationId}`);
-      showSuccess("Application deleted.");
-      if (editingApplication?._id === applicationId) {
-        setEditingApplication(null);
-      }
-      await loadDashboard();
+      showToast("Application deleted.");
     } catch (error) {
-      showError(error.response?.data?.message || "Could not delete application.");
+      setApplications(previousApplications);
+      setAnalytics(previousAnalytics);
+      showToast("Could not delete application. Changes reverted.", "error");
     }
   };
 
@@ -153,9 +194,9 @@ const DashboardPage = () => {
     try {
       const response = await apiClient.post("/reminders/send");
       const count = response.data?.digest?.count ?? 0;
-      showSuccess(`Reminder generated. ${count} item(s) included.`);
+      showToast(`Reminder generated. ${count} item(s) included.`);
     } catch (error) {
-      showError(error.response?.data?.message || "Could not generate reminders.");
+      showToast(error.response?.data?.message || "Could not generate reminders.", "error");
     }
   };
 
@@ -178,10 +219,6 @@ const DashboardPage = () => {
           </button>
         </div>
       </section>
-
-      {/* Bug #3: Success and error use different colours and are mutually exclusive */}
-      {successMessage ? <p className="success-text">{successMessage}</p> : null}
-      {errorMessage ? <p className="error-text">{errorMessage}</p> : null}
 
       <section className="stats-grid">
         <StatCard label="Total applications" value={analytics.stats.total} accent="linear-gradient(135deg, #ff7a59, #ffd166)" isEmpty={applications.length === 0} />
@@ -312,7 +349,12 @@ const DashboardPage = () => {
         {applications.length === 0 && !loading ? (
           <EmptyState onAddFirst={() => setEditingApplication({ ...emptyApplication })} />
         ) : (
-          <ApplicationsTable applications={applications} onEdit={setEditingApplication} onDelete={handleDelete} />
+          <ApplicationsTable 
+            applications={applications} 
+            onEdit={setEditingApplication} 
+            onDelete={handleDelete} 
+            onStatusChange={handleStatusChange}
+          />
         )}
         {loading ? (
           <div

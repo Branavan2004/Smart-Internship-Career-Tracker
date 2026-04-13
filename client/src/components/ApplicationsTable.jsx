@@ -1,7 +1,10 @@
 import { formatDate } from "../utils/formatters";
 import StatusBadge from "./StatusBadge";
 
-const ApplicationsTable = ({ applications, onEdit, onDelete }) => {
+const TODAY = new Date();
+TODAY.setHours(0, 0, 0, 0);
+
+const ApplicationsTable = ({ applications, onEdit, onDelete, onStatusChange }) => {
   return (
     <section className="panel">
       <div className="panel-header">
@@ -34,7 +37,12 @@ const ApplicationsTable = ({ applications, onEdit, onDelete }) => {
             ) : null}
 
             {applications.map((application) => {
-              const nextStage = application.interviewStages?.find((stage) => stage.date);
+              // Bug #4: Only pick stages whose date is today or in the future,
+              // then take the soonest one (sorted ascending by date).
+              const upcomingStages = (application.interviewStages || [])
+                .filter((stage) => stage.date && new Date(stage.date) >= TODAY)
+                .sort((a, b) => new Date(a.date) - new Date(b.date));
+              const nextStage = upcomingStages[0] || null;
 
               return (
                 <tr key={application._id}>
@@ -44,10 +52,13 @@ const ApplicationsTable = ({ applications, onEdit, onDelete }) => {
                   </td>
                   <td>{application.role}</td>
                   <td>
-                    <StatusBadge status={application.status} />
+                    <StatusBadge 
+                      status={application.status} 
+                      onChange={(newStatus) => onStatusChange(application._id, newStatus)} 
+                    />
                   </td>
                   <td>{formatDate(application.appliedDate)}</td>
-                  <td>{nextStage ? `${nextStage.round} · ${formatDate(nextStage.date)}` : "No stage set"}</td>
+                  <td>{nextStage ? `${nextStage.round} · ${formatDate(nextStage.date)}` : "No upcoming stage"}</td>
                   <td>{application.portfolioViewed ? "Viewed" : "Not viewed"}</td>
                   <td className="action-row">
                     <button type="button" className="ghost-button" onClick={() => onEdit(application)}>
