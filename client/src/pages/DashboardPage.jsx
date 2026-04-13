@@ -14,6 +14,7 @@ import {
 import apiClient from "../api/apiClient";
 import ApplicationForm from "../components/ApplicationForm";
 import ApplicationsTable from "../components/ApplicationsTable";
+import KanbanBoard from "../components/KanbanBoard";
 import EmptyState from "../components/EmptyState";
 import StatCard from "../components/StatCard";
 import { emptyApplication, roleTypeOptions, statusOptions } from "../utils/constants";
@@ -52,7 +53,12 @@ const DashboardPage = () => {
   const [editingApplication, setEditingApplication] = useState(null);
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [viewMode, setViewMode] = useState(() => localStorage.getItem("careerTrackerViewMode") || "table");
   const { showToast } = useToast();
+
+  useEffect(() => {
+    localStorage.setItem("careerTrackerViewMode", viewMode);
+  }, [viewMode]);
 
   const loadDashboard = async (searchOverride) => {
     setLoading(true);
@@ -228,8 +234,50 @@ const DashboardPage = () => {
       </section>
 
       <section className="panel filter-panel">
-        <div className="section-title-row">
+        <div className="section-title-row" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <h3>Filters</h3>
+          <div className="view-toggle" style={{ display: 'flex', gap: '8px' }}>
+            <button 
+              type="button"
+              className="view-toggle-btn"
+              style={{
+                background: viewMode === 'table' ? 'rgba(249, 115, 22, 0.15)' : 'transparent',
+                color: viewMode === 'table' ? '#f97316' : '#55637e',
+                border: `1px solid ${viewMode === 'table' ? '#f97316' : 'rgba(255,255,255,0.1)'}`,
+                padding: '6px',
+                borderRadius: '6px',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                transition: 'all 0.2s ease'
+              }}
+              onClick={() => setViewMode('table')}
+              title="Table View"
+            >
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>
+            </button>
+            <button 
+              type="button"
+              className="view-toggle-btn"
+              style={{
+                background: viewMode === 'board' ? 'rgba(249, 115, 22, 0.15)' : 'transparent',
+                color: viewMode === 'board' ? '#f97316' : '#55637e',
+                border: `1px solid ${viewMode === 'board' ? '#f97316' : 'rgba(255,255,255,0.1)'}`,
+                padding: '6px',
+                borderRadius: '6px',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                transition: 'all 0.2s ease'
+              }}
+              onClick={() => setViewMode('board')}
+              title="Board View"
+            >
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="9" y1="3" x2="9" y2="21"></line></svg>
+            </button>
+          </div>
         </div>
         <div className="field-grid">
           <label>
@@ -348,11 +396,17 @@ const DashboardPage = () => {
       <div style={{ position: "relative" }}>
         {applications.length === 0 && !loading ? (
           <EmptyState onAddFirst={() => setEditingApplication({ ...emptyApplication })} />
-        ) : (
+        ) : viewMode === 'table' ? (
           <ApplicationsTable 
             applications={applications} 
             onEdit={setEditingApplication} 
             onDelete={handleDelete} 
+            onStatusChange={handleStatusChange}
+          />
+        ) : (
+          <KanbanBoard
+            applications={applications} 
+            onEdit={setEditingApplication} 
             onStatusChange={handleStatusChange}
           />
         )}
