@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   Bar,
   BarChart,
@@ -14,6 +14,7 @@ import {
 import apiClient from "../api/apiClient";
 import ApplicationForm from "../components/ApplicationForm";
 import ApplicationsTable from "../components/ApplicationsTable";
+import EmptyState from "../components/EmptyState";
 import StatCard from "../components/StatCard";
 import { emptyApplication, roleTypeOptions, statusOptions } from "../utils/constants";
 
@@ -40,21 +41,37 @@ const DashboardPage = () => {
     roleType: "",
     search: ""
   });
+
+  // Bug #6: We keep a separate "committed" search that only updates after debounce
+  const [committedSearch, setCommittedSearch] = useState("");
+  const searchDebounceRef = useRef(null);
+
   const [reminders, setReminders] = useState({ count: 0, summary: [] });
   const [editingApplication, setEditingApplication] = useState(null);
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [message, setMessage] = useState("");
 
-  const loadDashboard = async () => {
+  // Bug #3: Separate success/error messages so colours are always correct
+  const [successMessage, setSuccessMessage] = useState("");
+  const [errorMessage, setErrorMessage] = useState("");
+
+  const showSuccess = (msg) => { setSuccessMessage(msg); setErrorMessage(""); };
+  const showError = (msg) => { setErrorMessage(msg); setSuccessMessage(""); };
+  const clearMessages = () => { setSuccessMessage(""); setErrorMessage(""); };
+
+  const loadDashboard = async (searchOverride) => {
     setLoading(true);
 
+    const activeSearch = searchOverride !== undefined ? searchOverride : committedSearch;
+
     try {
-      const applicationResponse = await apiClient.get("/applications", {
-        params: Object.fromEntries(
-          Object.entries(filters).filter(([, value]) => value)
-        )
-      });
+      const activeFilters = {
+        ...(filters.status ? { status: filters.status } : {}),
+        ...(filters.roleType ? { roleType: filters.roleType } : {}),
+        ...(activeSearch ? { search: activeSearch } : {})
+      };
+
+      const applicationResponse = await apiClient.get("/applications", { params: activeFilters });
       const [analyticsResponse, reminderResponse] = await Promise.all([
         apiClient.get("/analytics"),
         apiClient.get("/reminders")
@@ -64,38 +81,51 @@ const DashboardPage = () => {
       setAnalytics(analyticsResponse.data);
       setReminders(reminderResponse.data);
     } catch (error) {
-      setMessage(error.response?.data?.message || "Could not refresh dashboard data.");
+      showError(error.response?.data?.message || "Could not refresh dashboard data.");
     } finally {
       setLoading(false);
     }
   };
 
+  // Bug #6: Only fire on committed search + select filters, not on every keystroke
   useEffect(() => {
     loadDashboard();
-  }, [filters.status, filters.roleType, filters.search]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filters.status, filters.roleType, committedSearch]);
 
   const handleFilterChange = (event) => {
     const { name, value } = event.target;
-    setFilters((current) => ({ ...current, [name]: value }));
+
+    if (name === "search") {
+      // Update local display immediately, but debounce the API call
+      setFilters((current) => ({ ...current, search: value }));
+      if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current);
+      searchDebounceRef.current = setTimeout(() => {
+        setCommittedSearch(value);
+      }, 400);
+    } else {
+      // Status / roleType selects fire immediately
+      setFilters((current) => ({ ...current, [name]: value }));
+    }
   };
 
   const handleSaveApplication = async (payload) => {
     setSaving(true);
-    setMessage("");
+    clearMessages();
 
     try {
       if (editingApplication?._id) {
         await apiClient.put(`/applications/${editingApplication._id}`, payload);
-        setMessage("Application updated.");
+        showSuccess("Application updated.");
       } else {
         await apiClient.post("/applications", payload);
-        setMessage("Application added.");
+        showSuccess("Application added.");
       }
 
       setEditingApplication(null);
       await loadDashboard();
     } catch (error) {
-      setMessage(error.response?.data?.message || "Could not save application.");
+      showError(error.response?.data?.message || "Could not save application.");
     } finally {
       setSaving(false);
     }
@@ -108,22 +138,24 @@ const DashboardPage = () => {
 
     try {
       await apiClient.delete(`/applications/${applicationId}`);
-      setMessage("Application deleted.");
+      showSuccess("Application deleted.");
       if (editingApplication?._id === applicationId) {
         setEditingApplication(null);
       }
       await loadDashboard();
     } catch (error) {
-      setMessage(error.response?.data?.message || "Could not delete application.");
+      showError(error.response?.data?.message || "Could not delete application.");
     }
   };
 
+  // Bug #9: Safely read the nested count and display it correctly
   const handleSendReminder = async () => {
     try {
       const response = await apiClient.post("/reminders/send");
-      setMessage(`${response.data.message} ${response.data.digest.count} item(s) included.`);
+      const count = response.data?.digest?.count ?? 0;
+      showSuccess(`Reminder generated. ${count} item(s) included.`);
     } catch (error) {
-      setMessage(error.response?.data?.message || "Could not generate reminders.");
+      showError(error.response?.data?.message || "Could not generate reminders.");
     }
   };
 
@@ -147,13 +179,15 @@ const DashboardPage = () => {
         </div>
       </section>
 
-      {message ? <p className="success-text">{message}</p> : null}
+      {/* Bug #3: Success and error use different colours and are mutually exclusive */}
+      {successMessage ? <p className="success-text">{successMessage}</p> : null}
+      {errorMessage ? <p className="error-text">{errorMessage}</p> : null}
 
       <section className="stats-grid">
-        <StatCard label="Total applications" value={analytics.stats.total} accent="linear-gradient(135deg, #ff7a59, #ffd166)" />
-        <StatCard label="Pending" value={analytics.stats.pending} accent="linear-gradient(135deg, #ffd166, #f4a261)" />
-        <StatCard label="Interviewed" value={analytics.stats.interviewed} accent="linear-gradient(135deg, #5ec4ff, #2a9d8f)" />
-        <StatCard label="Success rate" value={`${analytics.stats.successRate}%`} accent="linear-gradient(135deg, #24b47e, #a7f3d0)" />
+        <StatCard label="Total applications" value={analytics.stats.total} accent="linear-gradient(135deg, #ff7a59, #ffd166)" isEmpty={applications.length === 0} />
+        <StatCard label="Pending" value={analytics.stats.pending} accent="linear-gradient(135deg, #ffd166, #f4a261)" isEmpty={applications.length === 0} />
+        <StatCard label="Interviewed" value={analytics.stats.interviewed} accent="linear-gradient(135deg, #5ec4ff, #2a9d8f)" isEmpty={applications.length === 0} />
+        <StatCard label="Success rate" value={`${analytics.stats.successRate}%`} accent="linear-gradient(135deg, #24b47e, #a7f3d0)" isEmpty={applications.length === 0} />
       </section>
 
       <section className="panel filter-panel">
@@ -163,6 +197,7 @@ const DashboardPage = () => {
         <div className="field-grid">
           <label>
             Search
+            {/* Bug #6: value comes from display state (filters.search), not committed state */}
             <input name="search" value={filters.search} onChange={handleFilterChange} placeholder="Company or role" />
           </label>
           <label>
@@ -272,9 +307,31 @@ const DashboardPage = () => {
         )}
       </section>
 
-      <ApplicationsTable applications={applications} onEdit={setEditingApplication} onDelete={handleDelete} />
-
-      {loading ? <p className="muted-text">Refreshing dashboard data...</p> : null}
+      {/* Bug #11: Loading indicator sits inside the table section, not after it */}
+      <div style={{ position: "relative" }}>
+        {applications.length === 0 && !loading ? (
+          <EmptyState onAddFirst={() => setEditingApplication({ ...emptyApplication })} />
+        ) : (
+          <ApplicationsTable applications={applications} onEdit={setEditingApplication} onDelete={handleDelete} />
+        )}
+        {loading ? (
+          <div
+            style={{
+              position: "absolute",
+              inset: 0,
+              display: "grid",
+              placeItems: "center",
+              borderRadius: "28px",
+              background: "rgba(248, 251, 255, 0.72)",
+              backdropFilter: "blur(4px)",
+              fontSize: "0.95rem",
+              color: "#55637e"
+            }}
+          >
+            Refreshing…
+          </div>
+        ) : null}
+      </div>
     </div>
   );
 };
