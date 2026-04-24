@@ -20,6 +20,16 @@ import reviewRoutes from "./routes/reviewRoutes.js";
 import reminderRoutes from "./routes/reminderRoutes.js";
 import { errorHandler, notFound } from "./middleware/errorMiddleware.js";
 import { globalApiLimiter } from "./middleware/rateLimiter.js";
+import { requestMetrics } from "./middleware/requestMetrics.js";
+import { tenantContext } from "./middleware/tenantMiddleware.js";
+import { enforceQuota } from "./middleware/quotaMiddleware.js";
+import metricsRoutes from "./routes/metricsRoutes.js";
+import { registerNotificationHandlers } from "./events/handlers/notificationHandler.js";
+import { registerAnalyticsHandlers } from "./events/handlers/analyticsHandler.js";
+
+// Register event bus handlers at startup (before any request arrives)
+registerNotificationHandlers();
+registerAnalyticsHandlers();
 
 dotenv.config();
 
@@ -30,9 +40,25 @@ const app = express();
 
 app.set("trust proxy", 1);
 
+const allowedOrigins = [
+  "http://localhost:3000",
+  "http://localhost:5173",
+  "http://127.0.0.1:3000",
+  "http://127.0.0.1:5173",
+  process.env.CLIENT_URL
+].filter(Boolean);
+
 app.use(
   cors({
-    origin: process.env.CLIENT_URL || "http://localhost:5173",
+    origin: (origin, callback) => {
+      // Allow requests with no origin (like mobile apps or curl)
+      if (!origin) return callback(null, true);
+      if (allowedOrigins.indexOf(origin) !== -1 || origin.startsWith("http://localhost:")) {
+        callback(null, true);
+      } else {
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
     credentials: true
   })
 );
@@ -58,6 +84,7 @@ app.use(passport.initialize());
 app.use(passport.session());
 app.use("/uploads", express.static(path.join(__dirname, "../uploads")));
 app.use(globalApiLimiter);
+app.use(requestMetrics);
 
 app.get("/api/health", (_req, res) => {
   res.json({
@@ -69,10 +96,12 @@ app.use("/api/docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 app.use("/api/auth", authRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/profile", profileRoutes);
-app.use("/api/applications", applicationRoutes);
-app.use("/api/analytics", analyticsRoutes);
+// Tenant context + quota enforcement on all data routes
+app.use("/api/applications", tenantContext, enforceQuota, applicationRoutes);
+app.use("/api/analytics", tenantContext, analyticsRoutes);
 app.use("/api/review", reviewRoutes);
 app.use("/api/reminders", reminderRoutes);
+app.use("/api/metrics", metricsRoutes);
 
 app.use(notFound);
 app.use(errorHandler);
