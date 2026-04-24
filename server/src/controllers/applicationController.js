@@ -1,5 +1,6 @@
 import Application from "../models/Application.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
+import { eventBus } from "../events/EventBus.js";
 
 const normalizeDate = (value) => {
   if (!value) {
@@ -46,7 +47,17 @@ export const createApplication = asyncHandler(async (req, res) => {
     appliedDate: normalizeDate(req.body.appliedDate),
     followUpDate: normalizeDate(req.body.followUpDate),
     interviewStages: normalizeStages(req.body.interviewStages),
-    user: req.user._id
+    user: req.user._id,
+    tenantId: req.user.tenantId || "default",
+  });
+
+  // Publish domain event — handlers run asynchronously
+  eventBus.publish("application.created", {
+    user: { _id: req.user._id, email: req.user.email, name: req.user.name },
+    tenantId: req.user.tenantId || "default",
+    companyName: application.companyName,
+    role: application.role,
+    applicationId: application._id,
   });
 
   res.status(201).json({
@@ -93,6 +104,19 @@ export const updateApplication = asyncHandler(async (req, res) => {
 
   await application.save();
 
+  // Publish status change event if status was mutated
+  if (req.body.status && req.body.status !== application.status) {
+    eventBus.publish("application.status_changed", {
+      user: { _id: req.user._id, email: req.user.email, name: req.user.name },
+      tenantId: req.user.tenantId || "default",
+      companyName: application.companyName,
+      role: application.role,
+      applicationId: application._id,
+      previousStatus: application.status,
+      newStatus: req.body.status,
+    });
+  }
+
   res.json({
     message: "Application updated successfully.",
     application
@@ -110,6 +134,14 @@ export const deleteApplication = asyncHandler(async (req, res) => {
     error.statusCode = 404;
     throw error;
   }
+
+  // Publish delete event
+  eventBus.publish("application.deleted", {
+    user: { _id: req.user._id, email: req.user.email },
+    tenantId: req.user.tenantId || "default",
+    companyName: application.companyName,
+    applicationId: application._id,
+  });
 
   res.json({ message: "Application deleted successfully." });
 });
