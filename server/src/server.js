@@ -8,17 +8,33 @@ dotenv.config();
 
 const port = process.env.PORT || 5001;
 
+// Debug: log which env vars are present (not values, just keys)
+console.log("=== SERVER STARTUP ===");
+console.log("PORT:", port);
+console.log("MONGODB_URI set:", Boolean(process.env.MONGODB_URI));
+console.log("JWT_SECRET set:", Boolean(process.env.JWT_SECRET));
+console.log("NODE_ENV:", process.env.NODE_ENV);
+
 const startServer = async () => {
+  // Always start listening first so the container stays alive
+  app.listen(port, () => {
+    console.log(`Server listening on port ${port}`);
+  });
+
+  // Then try to connect to DB (non-fatal)
   try {
     await connectDatabase();
-    await setupAsgardeoStrategy(passport);
-    app.listen(port, () => {
-      console.log(`Server listening on port ${port}`);
-    });
   } catch (error) {
-    console.error("Failed to start server", error);
-    process.exit(1);
+    console.error("MongoDB connection failed (server still running):", error.message);
+  }
+
+  // Then try Asgardeo (non-fatal)
+  try {
+    await setupAsgardeoStrategy(passport);
+  } catch (error) {
+    console.error("Asgardeo setup failed (server still running):", error.message);
   }
 };
 
 startServer();
+
