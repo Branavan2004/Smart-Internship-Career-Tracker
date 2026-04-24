@@ -1,7 +1,6 @@
 import { Navigate, Route, Routes } from "react-router-dom";
 import AppShell from "./layouts/AppShell";
 import ProtectedRoute from "./components/ProtectedRoute";
-import { ToastProvider } from "./context/ToastContext";
 import { useAuth } from "./hooks/useAuth";
 import AuthPage from "./pages/AuthPage";
 import AdminDashboardPage from "./pages/AdminDashboardPage";
@@ -13,18 +12,18 @@ import SessionManager from "./components/SessionManager";
 import RateLimitBanner from "./components/RateLimitBanner";
 
 const App = () => {
-  const { token, loading } = useAuth();
+  const { isAuthenticated, loading } = useAuth();
 
   if (loading) {
     return <div className="page-loader">Loading your workspace...</div>;
   }
 
   return (
-    <ToastProvider>
+    <>
       <SessionManager />
       <RateLimitBanner />
       <Routes>
-        <Route path="/auth" element={token ? <Navigate to="/" replace /> : <AuthPage />} />
+        <Route path="/auth" element={isAuthenticated ? <Navigate to="/" replace /> : <AuthPage />} />
         <Route path="/auth/callback" element={<GoogleAuthCallbackPage />} />
         <Route
           path="/"
@@ -53,9 +52,9 @@ const App = () => {
             }
           />
         </Route>
-        <Route path="*" element={<Navigate to={token ? "/" : "/auth"} replace />} />
+        <Route path="*" element={<Navigate to={isAuthenticated ? "/" : "/auth"} replace />} />
       </Routes>
-    </ToastProvider>
+    </>
   );
 };
 

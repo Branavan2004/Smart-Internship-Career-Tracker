@@ -3,6 +3,7 @@ import ReactDOM from "react-dom/client";
 import { BrowserRouter } from "react-router-dom";
 import { AuthProvider as AsgardeoProvider } from "@asgardeo/auth-react";
 import App from "./App";
+import { ToastProvider } from "./context/ToastContext";
 import { AuthProvider } from "./context/AuthContext";
 import { ApiProvider } from "./context/ApiContext";
 import { setupInterceptors } from "./utils/apiInterceptor";
@@ -24,11 +25,13 @@ ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
     <AsgardeoProvider config={asgardeoConfig}>
       <BrowserRouter>
-        <ApiProvider>
-          <AuthProvider>
-            <App />
-          </AuthProvider>
-        </ApiProvider>
+        <ToastProvider>
+          <ApiProvider>
+            <AuthProvider>
+              <App />
+            </AuthProvider>
+          </ApiProvider>
+        </ToastProvider>
       </BrowserRouter>
     </AsgardeoProvider>
   </React.StrictMode>
