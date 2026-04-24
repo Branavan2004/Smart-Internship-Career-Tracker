@@ -1,0 +1,104 @@
+# WSO2 API Manager — Monetisation Tier Definitions
+#
+# Import these into WSO2 APIM via:
+#   Publisher Portal → Policies → Advanced Throttling → Import
+#
+# Or reference them in a Choreo API policy config.
+#
+# Tier selection logic:
+#   - Requests are tagged with X-Quota-Tier header by tenantMiddleware
+#   - APIM enforces the tier at the gateway level (hardware throttle)
+#   - The application-level quotaMiddleware enforces the daily write limit
+
+tiers:
+  # ── Free Tier ─────────────────────────────────────────────────────────────
+  - name: Free
+    displayName: Free
+    description: |
+      Entry-level tier for individual students.
+      100 write operations per day. Read operations are unlimited.
+      Suitable for tracking up to ~5 applications per day.
+    requestsPerDay: 100
+    requestsPerMinute: 5
+    bandwidthMbPerMonth: 100
+    stopOnQuotaReach: true
+    billing:
+      type: free
+      price: 0
+      currency: USD
+    features:
+      - Basic internship tracking
+      - CSV export
+      - Email reminders
+    upgradePrompt: "Upgrade to Premium for 100x more capacity"
+
+  # ── Premium Tier ──────────────────────────────────────────────────────────
+  - name: Premium
+    displayName: Premium
+    description: |
+      Power-user tier for active job seekers and small teams.
+      10,000 write operations per day.
+      Includes advanced analytics and priority support.
+    requestsPerDay: 10000
+    requestsPerMinute: 100
+    bandwidthMbPerMonth: 5000
+    stopOnQuotaReach: true
+    billing:
+      type: subscription
+      price: 9.99
+      currency: USD
+      interval: monthly
+    features:
+      - Everything in Free
+      - Advanced analytics dashboard
+      - Kanban board with drag-and-drop
+      - API access for third-party integrations
+      - Priority email support
+
+  # ── Enterprise Tier ───────────────────────────────────────────────────────
+  - name: Enterprise
+    displayName: Enterprise
+    description: |
+      Unlimited tier for organisations and universities.
+      Includes multi-tenant isolation, SSO via Asgardeo, and SLA guarantees.
+    requestsPerDay: unlimited
+    requestsPerMinute: 1000
+    bandwidthMbPerMonth: unlimited
+    stopOnQuotaReach: false
+    billing:
+      type: custom
+      price: "Contact sales"
+      currency: USD
+    features:
+      - Everything in Premium
+      - Multi-tenant organisational accounts
+      - SSO with Asgardeo / SAML / LDAP
+      - Dedicated MongoDB namespace
+      - SLA: 99.9% uptime
+      - Custom analytics reports
+      - Webhook event subscriptions
+      - Dedicated Choreo environment
+
+# ── Throttling Policy Mappings ────────────────────────────────────────────
+# Map x-wso2-throttling-tier values in openapi.yaml to these tier limits.
+
+throttlingPolicies:
+  - policyName: 10PerMin
+    description: Strict limit for auth endpoints (brute-force protection)
+    requestsPerMin: 10
+
+  - policyName: 20PerMin
+    description: Auth and token refresh
+    requestsPerMin: 20
+
+  - policyName: Silver
+    description: Write operations — counted against daily quota
+    requestsPerMin: 60
+
+  - policyName: Gold
+    description: Read operations — high throughput
+    requestsPerMin: 300
+
+  - policyName: Unlimited
+    description: Internal / health check routes
+    requestsPerMin: -1  # no limit

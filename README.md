@@ -1,111 +1,250 @@
-# Smart Internship & Career Tracker
+# Smart Internship & Career Ecosystem
 
-A production-grade full-stack internship management platform built with React, Node.js, Express, and MongoDB. This project demonstrates advanced patterns in modern web development, including multi-provider authentication (Google OAuth2 + Asgardeo OIDC), enterprise API governance with WSO2 API Manager, and cloud-native deployment via Docker and WSO2 Choreo.
+A **production-grade, multi-tenant SaaS platform** for internship and career tracking, built on the full WSO2 technology stack. Demonstrates enterprise engineering patterns including event-driven architecture, API monetisation, multi-tenancy, and real-time observability.
 
-## What This Project Demonstrates
+[![Architecture](https://img.shields.io/badge/docs-architecture-blue)](./docs/architecture.md)
+[![OpenAPI](https://img.shields.io/badge/API-OpenAPI%203.0-green)](./apim/openapi.yaml)
+[![Choreo](https://img.shields.io/badge/deploy-WSO2%20Choreo-orange)](./choreo/component.yaml)
+[![Ballerina](https://img.shields.io/badge/service-Ballerina%202201.8-blueviolet)](./analytics-service/analytics_service.bal)
 
-- **Modern Frontend**: React + Vite with role-aware UIs, analytics dashboards, and Kanban-style pipeline tracking.
-- **Robust Backend**: Node.js/Express API with MongoDB and Mongoose.
-- **Enterprise Identity**: Multi-provider auth using Google OAuth2 and **WSO2 Asgardeo (OIDC)**.
-- **API Governance**: Complete **WSO2 API Manager** integration with OpenAPI 3.0 specs and throttling policies.
-- **Cloud Native**: Containerization with **Docker** and automated deployment via **WSO2 Choreo**.
-- **Security & RBAC**: Granular Role-Based Access Control (`student`, `admin`, `reviewer`).
-- **DevOps**: RBAC preflight validation scripts and comprehensive testing with Jest/Vitest.
+---
 
-## Core Features
+## Engineering Highlights
 
-### Authentication and Identity
-- **Local Auth**: Email/password registration and login with bcrypt hashing.
-- **Google OAuth2**: Social login integrated via Passport.js.
-- **Asgardeo OIDC**: Enterprise-grade identity management with OpenID Connect discovery via `openid-client`.
-- **Identity Model**: User profiles support multi-identity mapping (e.g., `googleId`, `asgardeoId`).
-- **Session Management**: Enterprise-grade session awareness featuring silent token refreshes, proactive 2-minute expiry warnings, and secure lock-out screens using the `@asgardeo/auth-react` SDK.
+This is not a CRUD app with a WSO2 logo on it. Here is what makes it architecturally significant:
 
-### Security and Governance
-- **API Management**: Managed via WSO2 API Manager with dedicated throttling tiers.
-- **Rate-Limiting & Feedback**: Multi-layered backend protection mapped to a smart front-end interceptor that handles APIM 429 errors using exponential backoff, accompanied by visual countdown banners and context-aware APIM quota indicators.
-- **Hardening**: Helmet security headers and comprehensive request validation.
+### ⚡ Event-Driven Architecture
+Every application mutation (create, update, delete) publishes a **domain event** to an in-process `EventBus` with exponential-backoff retry logic and a dead-letter queue. Handlers (`notificationHandler`, `analyticsHandler`) run asynchronously — HTTP response is returned before handlers complete. Maps directly onto Kafka/RabbitMQ in production with zero interface changes.
 
-### Internship Management
-- Full CRUD for internship applications seamlessly integrated with optimistic UI updates for instant feedback and fail-safe API rollbacks.
-- **Kanban Board**: Interactive drag-and-drop board (via `@hello-pangea/dnd`) for tracking application pipelines visually, available alongside the classic data table.
-- Tracking of portfolio views and interview stages.
-- Profile management with resume upload support via Multer.
-- Analytics dashboard and automated reminder summaries.
+### 🏢 Multi-Tenancy
+Logical tenant isolation at the database level. Every `User` and `Application` document carries a `tenantId` index. The `tenantContext` middleware extracts and propagates tenant identity throughout the request lifecycle. WSO2-style quota headers (`X-Quota-Tier`, `X-Quota-Used`, `X-Quota-Remaining`) are injected into every API response.
+
+### 💰 API Monetisation Simulation
+Three tiers — **Free** (100 writes/day), **Premium** (10,000/day), **Enterprise** (unlimited). Write operations atomically increment a per-user daily counter. Quota breaches return HTTP 429 responses that match WSO2 API Manager's throttle response schema exactly, including `Retry-After` headers and upgrade prompts.
+
+### 🔭 Real Observability
+- **Correlation IDs**: Every request gets an `X-Request-ID` (UUID) propagated through the full call chain
+- **Per-route metrics**: Request count, average latency, error rate — all queryable via `/api/metrics`
+- **Domain event log**: The last 200 events with payload, accessible via `/api/metrics/events`
+- **Security log**: Failed auth attempts and quota breaches, visible in the Admin console
+
+### 🔐 Security That Goes Beyond OAuth2
+Beyond OIDC: JWT validation middleware with access logging, brute-force protection (separate rate-limit bucket for failed logins), `logUnauthorizedAttempt()` that feeds the security event store, Helmet headers, and scope-based RBAC across all routes.
+
+### ☁️ Ballerina Microservice
+The `analytics-service` is written in idiomatic Ballerina — not Node.js with a `.bal` extension. It demonstrates:
+- JWT validation against Asgardeo's JWKS endpoint
+- Typed MongoDB stream queries
+- Ballerina `match` expressions for exhaustive status aggregation
+- Choreo-native observability (`observabilityIncluded = true`)
+
+---
 
 ## Tech Stack
 
-### Frontend
-- **Framework**: React (Vite)
-- **Routing**: React Router
-- **State/API**: Axios, Recharts
-- **Testing**: Vitest, React Testing Library
+| Layer | Technology |
+|---|---|
+| Identity | WSO2 Asgardeo (OIDC), Google OAuth2, Local JWT |
+| API Gateway | WSO2 API Manager (throttling, monetisation, OpenAPI) |
+| Deployment | WSO2 Choreo (multi-component, CI/CD, observability) |
+| Analytics Service | **Ballerina** 2201.8 |
+| Backend | Node.js / Express (monolith + microservice stubs) |
+| Frontend | React 18 + Vite (role-based dashboards, Kanban, Recharts) |
+| Database | MongoDB with Mongoose (tenantId-indexed collections) |
+| Containerisation | Docker + Docker Compose |
 
-### Backend
-- **Runtime**: Node.js, Express
-- **Database**: MongoDB with Mongoose
-- **Identity**: Passport.js, **openid-client**, **WSO2 Asgardeo**
-- **Security**: JWT, bcryptjs, express-rate-limit, helmet
+---
 
-### Deployment & Governance
-- **Containerization**: Docker, Docker Compose
-- **Cloud Platform**: WSO2 Choreo
-- **API Portal**: WSO2 API Manager (APIM)
+## Architecture
+
+See [docs/architecture.md](./docs/architecture.md) for the full system diagram, event flow, multi-tenancy model, and security architecture.
+
+**High-level flow:**
+
+```
+User → Asgardeo (OIDC) → React SPA
+                            ↓
+                     Choreo Gateway (APIM throttling)
+                            ↓
+               ┌────────────────────────────┐
+               │   Node.js Backend           │
+               │   tenantContext             │
+               │   quotaMiddleware           │
+               │   requestMetrics (X-Req-ID) │
+               └──────────┬─────────────────┘
+                           │
+                     EventBus.publish()
+                    /                \
+         NotificationHandler    AnalyticsHandler
+         (email simulation)     (metricsStore)
+```
+
+---
 
 ## Project Structure
 
-```text
+```
 Smart-Internship-Career-Tracker/
-├── .choreo/                 Choreo deployment configurations
-├── apim/                    WSO2 API Manager artifacts (OpenAPI, Policies)
-├── client/                  React frontend
-│   ├── Dockerfile           Frontend container definition
-│   └── ...
-├── server/                  Express backend
-│   ├── Dockerfile           Backend container definition
-│   └── ...
-├── docs/                    Architecture and validation notes
-├── docker-compose.yml       Local orchestration
-├── rbac-check.sh            RBAC preflight runner
-└── README.md
+├── .choreo/
+│   └── component.yaml          Multi-component Choreo deployment (Node + Ballerina + SPA)
+├── analytics-service/
+│   ├── analytics_service.bal   Ballerina analytics service (Asgardeo JWT + MongoDB)
+│   └── Ballerina.toml          Package definition for Choreo
+├── apim/
+│   ├── openapi.yaml            OpenAPI 3.0.3 with x-wso2-throttling-tier extensions
+│   └── policies/
+│       └── monetization-tiers.yaml  Free / Premium / Enterprise tier definitions
+├── client/                     React frontend (Vite)
+│   └── src/
+│       ├── components/
+│       │   ├── EventFeed.jsx       Live domain event stream (Admin)
+│       │   ├── QuotaIndicator.jsx  Animated tier + quota widget
+│       │   ├── KanbanBoard.jsx     Drag-and-drop application pipeline
+│       │   ├── RateLimitBanner.jsx APIM 429 countdown + retry
+│       │   └── SessionManager.jsx  Silent token refresh + expiry warnings
+│       └── pages/
+│           ├── AdminDashboardPage.jsx   Observability console (metrics, events, security)
+│           ├── DashboardPage.jsx        Student application tracker + analytics
+│           └── ReviewQueuePage.jsx      Reviewer pipeline
+├── server/                     Node.js backend
+│   └── src/
+│       ├── events/
+│       │   ├── EventBus.js             Domain event bus (retry + dead-letter)
+│       │   └── handlers/
+│       │       ├── notificationHandler.js
+│       │       └── analyticsHandler.js
+│       ├── middleware/
+│       │   ├── authMiddleware.js        JWT verification + RBAC
+│       │   ├── tenantMiddleware.js      Tenant isolation + quota headers
+│       │   ├── quotaMiddleware.js       Daily write quota enforcement
+│       │   ├── requestMetrics.js        X-Request-ID + latency tracking
+│       │   └── rateLimiter.js          express-rate-limit (global, auth, brute-force)
+│       ├── routes/
+│       │   └── metricsRoutes.js         /api/metrics (admin-only observability)
+│       └── utils/
+│           └── metricsStore.js          In-memory metrics aggregation
+├── docs/
+│   └── architecture.md         Full system architecture documentation
+└── docker-compose.yml
 ```
 
-## Important API Routes
+---
 
-### Authentication
-- `POST /api/auth/register`
-- `POST /api/auth/login`
-- `POST /api/auth/refresh`
-- `POST /api/auth/logout`
-- `GET  /api/auth/google` & `/google/callback`
-- `GET  /api/auth/asgardeo` & `/asgardeo/callback` (OIDC)
-- `GET  /api/auth/me`
+## API Monetisation Tiers
 
-### Application & RBAC
-- `GET  /api/admin/dashboard` (Admin Only)
-- `GET  /api/review` (Reviewer Only)
-- `GET  /api/applications` (Student Only)
-- `GET  /api/profile` & `PUT /api/profile`
-- `GET  /api/analytics`
+| Tier | Daily Writes | Req/Min | Monthly Cost |
+|---|---|---|---|
+| **Free** | 100 | 5 | $0 |
+| **Premium** | 10,000 | 100 | $9.99 |
+| **Enterprise** | Unlimited | 1,000 | Custom |
+
+Quota breaches return HTTP 429 with `Retry-After` and tier upgrade info — matching WSO2 API Manager's throttle response format.
+
+---
+
+## Admin Observability Console
+
+Accessible at `/admin` (admin role required). Panels:
+
+| Panel | Data Source |
+|---|---|
+| System Health | `GET /api/metrics` — uptime, avg latency, error rate |
+| API Route Usage | Route-level request counts and latency (bar chart) |
+| Tier Distribution | Requests per tier: free/premium/enterprise (pie chart) |
+| Tenant Overview | Applications created and placed per tenant (bar chart) |
+| Event Feed | Live domain events with dead-letter alerts (auto-refresh 8s) |
+| Security Log | Auth failures, quota breaches with IP and path |
+
+---
+
+## Running Locally
+
+### Prerequisites
+- Node.js 20+
+- MongoDB running locally on `mongodb://localhost:27017`
+- (Optional) Ballerina 2201.8+ for the analytics service
+
+### Backend + Frontend
+
+```bash
+# Install dependencies
+npm ci --prefix server
+npm ci --prefix client
+
+# Start backend
+npm run dev --prefix server
+
+# Start frontend (separate terminal)
+npm run dev --prefix client
+```
+
+### Full Stack with Docker
+
+```bash
+docker-compose up --build
+```
+
+Frontend: http://localhost:3000  
+Backend API: http://localhost:5001  
+API Docs: http://localhost:5001/api/docs  
+Metrics: http://localhost:5001/api/metrics (admin token required)
+
+### Ballerina Analytics Service
+
+```bash
+# Requires Ballerina 2201.8+
+cd analytics-service
+bal run
+# Service starts on :8080
+```
+
+---
 
 ## WSO2 Integration
 
-### API Manager (APIM)
-The `apim/` directory contains everything needed for enterprise governance:
-- **`openapi.yaml`**: Full OpenAPI 3.0.3 specification.
-- **`api-config.yaml`**: Configuration for the WSO2 Publisher portal.
-- **`throttling-policy.yaml`**: Mappings for Global, Auth, and Refresh rate limits.
-
 ### Asgardeo Setup
-1. Configure an OIDC application in your Asgardeo tenant.
-2. Set the redirect URI to `http://localhost:5001/api/auth/asgardeo/callback`.
-3. Map groups (`admin`, `reviewer`) in Asgardeo to system roles.
+1. Create an OIDC application in your Asgardeo tenant
+2. Set redirect URI to `http://localhost:5173`
+3. Set `VITE_ASGARDEO_CLIENT_ID` and `VITE_ASGARDEO_BASE_URL` in `client/.env`
+4. Map Asgardeo user groups (`admin`, `reviewer`) to system roles
+5. Add `tenantId` and `tier` as custom OIDC claims
 
-### Choreo & Docker
-- **Docker Compose**: Run `docker-compose up --build` to start the full stack locally.
-- **Choreo**: Connect this GitHub repo to Choreo to automate the build and deployment of the backend service following the `.choreo/` configurations.
+### API Manager Setup
+1. Import `apim/openapi.yaml` into the WSO2 Publisher portal
+2. Import `apim/policies/monetization-tiers.yaml` into Advanced Throttling Policies
+3. Map throttling tiers to the `x-wso2-throttling-tier` values in the OpenAPI spec
+4. Subscribe applications using the Free / Premium / Enterprise tiers
 
-## Testing and Development
-- **Backend Tests**: `npm run test --prefix server`
-- **Frontend Tests**: `npm run test --prefix client`
-- **RBAC Preflight**: `./rbac-check.sh`
+### Choreo Deployment
+1. Push this repository to GitHub
+2. Connect to WSO2 Choreo → Create Project → Import from GitHub
+3. Choreo auto-detects the three components from `.choreo/component.yaml`
+4. Inject secrets (MongoDB URI, Asgardeo credentials) via Choreo's secret management
+5. Deploy — Choreo handles Docker build, Kubernetes orchestration, and gateway config
+
+---
+
+## Testing
+
+```bash
+# Backend unit tests
+npm test --prefix server
+
+# Frontend component tests
+npm test --prefix client
+
+# RBAC preflight validation
+./rbac-check.sh
+
+# Ballerina tests
+cd analytics-service && bal test
+```
+
+---
+
+## Security Notes
+
+- **Never commit** `.env` files — all secrets are in `.env.example` templates
+- JWT secrets must be ≥ 64 characters in production
+- The `quotaResetAt` field uses UTC midnight — ensure server timezone is UTC in production
+- The in-memory `metricsStore` resets on restart — wire to Prometheus/InfluxDB for persistence

@@ -1,606 +1,372 @@
 openapi: 3.0.3
 info:
-  title: Smart Internship & Career Tracker API
-  version: v1.0
+  title: Smart Internship & Career Ecosystem API
+  version: 2.0.0
   description: |
-    API documentation for the Smart Internship & Career Tracker.
-    This API is managed by WSO2 API Manager and integrated with Asgardeo OIDC.
-    
-    Rate Limits:
-    - Default: 100 requests per 15 minutes.
-    - Authentication (Login/Register): 10 requests per 15 minutes.
-    - Token Refresh: 20 requests per 15 minutes.
+    Enterprise-grade internship and career management platform API.
+    Secured with Asgardeo OIDC. Rate limited by tier via WSO2 API Manager.
+    All write operations count against the caller's daily quota.
+  contact:
+    name: Platform Team
+    email: api@intern-tracker.io
+  license:
+    name: MIT
 
 servers:
-  - url: /smart-tracker/v1.0
-    description: WSO2 API Manager Gateway
+  - url: https://api.intern-tracker.io/v2
+    description: Production (via Choreo Gateway)
+  - url: http://localhost:5001
+    description: Local development
 
-tags:
-  - name: Authentication
-    description: User registration, login, and token management.
-  - name: Applications
-    description: Management of internship applications.
-  - name: Profile
-    description: User profile and resume management.
-  - name: Analytics
-    description: Application status and success rate analytics.
-  - name: Reminders
-    description: Follow-up and interview reminders.
-  - name: Admin
-    description: System-wide metrics for administrators.
-  - name: Utilities
-    description: Health checks and documentation.
+# ── WSO2 API Manager throttling tier extensions ───────────────────────────
+# These x-wso2-* extensions are consumed by the APIM Publisher portal.
+x-wso2-basePath: /internship/v2
+x-wso2-throttling-tier: Unlimited
+x-wso2-cors:
+  corsConfigurationEnabled: true
+  accessControlAllowOrigins:
+    - "*"
+  accessControlAllowCredentials: false
+  accessControlAllowMethods:
+    - GET
+    - POST
+    - PUT
+    - PATCH
+    - DELETE
+    - OPTIONS
+  accessControlAllowHeaders:
+    - Authorization
+    - Content-Type
+    - X-Request-ID
+    - X-Quota-Tier
 
-paths:
-  /api/auth/register:
-    post:
-      tags:
-        - Authentication
-      summary: Register a local user
-      description: |
-        Register a new user and issue an access token.
-        Rate Limit: 10 requests per 15 minutes.
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/RegisterRequest'
-      responses:
-        '201':
-          description: Registration successful
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/AuthSuccess'
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '409':
-          description: Email already exists
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ErrorResponse'
-        '429':
-          $ref: '#/components/responses/TooManyRequests'
-        '500':
-          $ref: '#/components/responses/ServerError'
-
-  /api/auth/login:
-    post:
-      tags:
-        - Authentication
-      summary: User login
-      description: |
-        Authenticate with email and password.
-        Rate Limit: 10 requests per 15 minutes.
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/LoginRequest'
-      responses:
-        '200':
-          description: Login successful
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/AuthSuccess'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '429':
-          $ref: '#/components/responses/TooManyRequests'
-        '500':
-          $ref: '#/components/responses/ServerError'
-
-  /api/auth/refresh:
-    post:
-      tags:
-        - Authentication
-      summary: Refresh access token
-      description: |
-        Rotate the refresh token and issue a new access token using HTTP-only cookie.
-        Rate Limit: 20 requests per 15 minutes.
-      responses:
-        '200':
-          description: Refresh successful
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/AuthSuccess'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '429':
-          $ref: '#/components/responses/TooManyRequests'
-
-  /api/auth/logout:
-    post:
-      tags:
-        - Authentication
-      summary: User logout
-      responses:
-        '200':
-          description: Logout successful
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/LogoutResponse'
-
-  /api/auth/google:
-    get:
-      tags:
-        - Authentication
-      summary: Google OAuth2 login
-      responses:
-        '302':
-          description: Redirect to Google
-
-  /api/auth/google/callback:
-    get:
-      tags:
-        - Authentication
-      summary: Google OAuth2 callback
-      responses:
-        '302':
-          description: Redirect on success/failure
-
-  /api/auth/asgardeo:
-    get:
-      tags:
-        - Authentication
-      summary: Asgardeo OIDC login
-      responses:
-        '302':
-          description: Redirect to Asgardeo
-
-  /api/auth/asgardeo/callback:
-    get:
-      tags:
-        - Authentication
-      summary: Asgardeo OIDC callback
-      responses:
-        '302':
-          description: Redirect on success/failure
-
-  /api/auth/me:
-    get:
-      tags:
-        - Authentication
-      summary: Get current authenticated user
-      security:
-        - bearerAuth: []
-        - oauth2: [openid, profile, email]
-      responses:
-        '200':
-          description: Current user details
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  user:
-                    $ref: '#/components/schemas/User'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-
-  /api/applications:
-    get:
-      tags:
-        - Applications
-      summary: List user applications
-      security:
-        - bearerAuth: []
-        - oauth2: [openid, profile, email]
-      responses:
-        '200':
-          description: Successful retrieval
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ApplicationsResponse'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '403':
-          $ref: '#/components/responses/Forbidden'
-
-    post:
-      tags:
-        - Applications
-      summary: Create application
-      security:
-        - bearerAuth: []
-        - oauth2: [openid, profile, email]
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required: [companyName, role]
-              properties:
-                companyName: { type: string }
-                role: { type: string }
-                roleType: { type: string }
-                appliedDate: { type: string, format: date-time }
-                status: { type: string, enum: [Pending, Interviewed, Accepted, Rejected, Offer] }
-                notes: { type: string }
-      responses:
-        '201':
-          description: Created
-        '400':
-          $ref: '#/components/responses/BadRequest'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-
-  /api/applications/{id}:
-    parameters:
-      - name: id
-        in: path
-        required: true
-        schema: { type: string }
-    put:
-      tags:
-        - Applications
-      summary: Update application
-      security:
-        - bearerAuth: []
-        - oauth2: [openid, profile, email]
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                companyName: { type: string }
-                role: { type: string }
-                status: { type: string }
-                notes: { type: string }
-      responses:
-        '200':
-          description: Updated
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '404':
-          description: Application not found
-
-    delete:
-      tags:
-        - Applications
-      summary: Delete application
-      security:
-        - bearerAuth: []
-        - oauth2: [openid, profile, email]
-      responses:
-        '200':
-          description: Deleted
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-
-  /api/profile:
-    get:
-      tags:
-        - Profile
-      summary: Get user profile
-      security:
-        - bearerAuth: []
-        - oauth2: [openid, profile, email]
-      responses:
-        '200':
-          description: Profile data
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ProfileResponse'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-
-    put:
-      tags:
-        - Profile
-      summary: Update user profile
-      security:
-        - bearerAuth: []
-        - oauth2: [openid, profile, email]
-      requestBody:
-        required: true
-        content:
-          multipart/form-data:
-            schema:
-              $ref: '#/components/schemas/ProfileUpdateRequest'
-          application/json:
-            schema:
-              $ref: '#/components/schemas/ProfileUpdateRequest'
-      responses:
-        '200':
-          description: Profile updated
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-
-  /api/analytics:
-    get:
-      tags:
-        - Analytics
-      summary: Get application analytics
-      security:
-        - bearerAuth: []
-        - oauth2: [openid, profile, email]
-      responses:
-        '200':
-          description: Analytics data
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/AnalyticsResponse'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-
-  /api/reminders:
-    get:
-      tags:
-        - Reminders
-      summary: Get reminders summary
-      security:
-        - bearerAuth: []
-        - oauth2: [openid, profile, email]
-      responses:
-        '200':
-          description: Reminders data
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ReminderSummaryResponse'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-
-  /api/reminders/send:
-    post:
-      tags:
-        - Reminders
-      summary: Send reminder email
-      security:
-        - bearerAuth: []
-        - oauth2: [openid, profile, email]
-      responses:
-        '200':
-          description: Reminder sent
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ReminderSendResponse'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-
-  /api/admin/dashboard:
-    get:
-      tags:
-        - Admin
-      summary: Admin dashboard metrics
-      security:
-        - bearerAuth: []
-        - oauth2: [openid, profile, email, admin]
-      responses:
-        '200':
-          description: Dashboard data
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/AdminDashboardResponse'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '403':
-          $ref: '#/components/responses/Forbidden'
-
-  /api/review:
-    get:
-      tags:
-        - Admin
-      summary: Review queue
-      security:
-        - bearerAuth: []
-        - oauth2: [openid, profile, email, reviewer]
-      responses:
-        '200':
-          description: Review queue data
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ReviewQueueResponse'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '403':
-          $ref: '#/components/responses/Forbidden'
-
-  /api/docs:
-    get:
-      tags:
-        - Utilities
-      summary: Get Swagger UI
-      responses:
-        '200':
-          description: Documentation page
-
+# ── Security ──────────────────────────────────────────────────────────────
 components:
   securitySchemes:
-    bearerAuth:
+    AsgardeoOIDC:
+      type: openIdConnect
+      openIdConnectUrl: https://api.asgardeo.io/t/YOUR_ORG/.well-known/openid-configuration
+    BearerAuth:
       type: http
       scheme: bearer
       bearerFormat: JWT
-    oauth2:
-      type: oauth2
-      description: Asgardeo OIDC Integration
-      flows:
-        authorizationCode:
-          authorizationUrl: https://api.asgardeo.io/t/<tenant-domain>/oauth2/authorize
-          tokenUrl: https://api.asgardeo.io/t/<tenant-domain>/oauth2/token
-          scopes:
-            openid: OpenID connect scope
-            profile: User profile details
-            email: User email address
-            admin: Administrative access
-            reviewer: Reviewer access
 
-  responses:
-    BadRequest:
-      description: Validation error
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/ErrorResponse'
-    Unauthorized:
-      description: Missing or invalid token
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/ErrorResponse'
-    Forbidden:
-      description: Insufficient permissions
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/ErrorResponse'
-    TooManyRequests:
-      description: Rate limit exceeded
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/RateLimitResponse'
-    ServerError:
-      description: Internal server error
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/ErrorResponse'
+  # ── Response headers shared across all endpoints ──────────────────────
+  headers:
+    X-Request-ID:
+      description: Correlation ID for distributed tracing
+      schema: { type: string, format: uuid }
+    X-Quota-Tier:
+      description: Caller's API tier (free / premium / enterprise)
+      schema: { type: string, enum: [free, premium, enterprise] }
+    X-Quota-Used:
+      description: Daily write operations consumed
+      schema: { type: integer }
+    X-Quota-Limit:
+      description: Daily write operation limit (or "unlimited")
+      schema: { type: string }
+    X-Quota-Remaining:
+      description: Remaining write operations today
+      schema: { type: string }
 
+  # ── Reusable response schemas ─────────────────────────────────────────
   schemas:
+    Error:
+      type: object
+      properties:
+        code:    { type: string }
+        message: { type: string }
+
+    QuotaExceeded:
+      type: object
+      properties:
+        code:                { type: string, example: QUOTA_EXCEEDED }
+        message:             { type: string }
+        tier:                { type: string }
+        limit:               { type: integer }
+        quotaUsed:           { type: integer }
+        upgradeUrl:          { type: string }
+        retryAfterSeconds:   { type: integer }
+
     User:
       type: object
       properties:
-        _id: { type: string, example: "67f1c43a4ebf8d1c2e7b1234" }
-        name: { type: string, example: "Jane Student" }
-        email: { type: string, format: email, example: "student@test.com" }
-        role: { type: string, enum: [student, admin, reviewer], example: student }
-        profilePicture: { type: string, example: "https://lh3.googleusercontent.com/a/profile-photo" }
-        createdAt: { type: string, format: date-time }
-
-    AuthSuccess:
-      type: object
-      properties:
-        user: { $ref: '#/components/schemas/User' }
-        accessToken: { type: string }
-        token: { type: string }
-
-    RegisterRequest:
-      type: object
-      required: [name, email, password]
-      properties:
-        name: { type: string }
-        email: { type: string, format: email }
-        password: { type: string }
-        role: { type: string, enum: [student, admin, reviewer] }
-
-    LoginRequest:
-      type: object
-      required: [email, password]
-      properties:
-        email: { type: string, format: email }
-        password: { type: string }
-
-    ErrorResponse:
-      type: object
-      properties:
-        message: { type: string, example: "ErrorMessage" }
-        errors:
-          type: array
-          items:
-            type: object
-            properties:
-              field: { type: string }
-              message: { type: string }
-
-    RateLimitResponse:
-      type: object
-      properties:
-        message: { type: string, example: "Too many requests. Please try again later." }
-
-    LogoutResponse:
-      type: object
-      properties:
-        message: { type: string, example: "Logged out successfully." }
-
-    ProfileUpdateRequest:
-      type: object
-      properties:
-        name: { type: string }
-        phone: { type: string }
-        skills:
-          oneOf:
-            - type: array
-              items: { type: string }
-            - type: string
-        resume: { type: string, format: binary }
-
-    ProfileResponse:
-      type: object
-      properties:
-        user: { $ref: '#/components/schemas/User' }
-
-    AdminDashboardResponse:
-      type: object
-      properties:
-        message: { type: string }
-        stats:
-          type: object
-          properties:
-            totalUsers: { type: integer }
-            totalApplications: { type: integer }
+        _id:       { type: string }
+        name:      { type: string }
+        email:     { type: string, format: email }
+        role:      { type: string, enum: [student, admin, reviewer] }
+        tenantId:  { type: string }
+        tier:      { type: string, enum: [free, premium, enterprise] }
+        quotaUsed: { type: integer }
 
     Application:
       type: object
+      required: [companyName, role, appliedDate]
       properties:
-        _id: { type: string }
-        companyName: { type: string }
-        role: { type: string }
-        status: { type: string }
+        _id:            { type: string }
+        companyName:    { type: string, example: "WSO2" }
+        role:           { type: string, example: "Software Engineer Intern" }
+        roleType:       { type: string, enum: [SE, PM, Data, Design, QA, Other] }
+        appliedDate:    { type: string, format: date }
+        status:         { type: string, enum: [Pending, Interviewed, Accepted, Rejected, Offer] }
+        tenantId:       { type: string }
+        notes:          { type: string }
+        portfolioLink:  { type: string }
+        portfolioViewed:{ type: boolean }
 
-    ApplicationsResponse:
-      type: object
-      properties:
-        applications:
-          type: array
-          items: { $ref: '#/components/schemas/Application' }
-
-    ReviewQueueResponse:
-      type: object
-      properties:
-        applications:
-          type: array
-          items: { $ref: '#/components/schemas/Application' }
-
-    AnalyticsResponse:
+    AnalyticsSummary:
       type: object
       properties:
         stats:
           type: object
           properties:
-            total: { type: integer }
-            successRate: { type: number }
-
-    ReminderSummaryResponse:
-      type: object
-      properties:
-        summary: { type: string }
-        reminders:
+            total:          { type: integer }
+            pending:        { type: integer }
+            interviewed:    { type: integer }
+            accepted:       { type: integer }
+            rejected:       { type: integer }
+            offer:          { type: integer }
+            portfolioViewed:{ type: integer }
+            successRate:    { type: number }
+        roleBreakdown:
           type: array
           items:
             type: object
             properties:
-              title: { type: string }
-              dueDate: { type: string, format: date-time }
+              name:  { type: string }
+              value: { type: integer }
 
-    ReminderSendResponse:
+    MetricsSnapshot:
       type: object
       properties:
-        message: { type: string }
-        preview: { type: string }
+        uptimeSeconds:  { type: integer }
+        totalRequests:  { type: integer }
+        avgLatencyMs:   { type: integer }
+        routeStats:
+          type: array
+          items:
+            type: object
+            properties:
+              route:       { type: string }
+              requests:    { type: integer }
+              avgLatencyMs:{ type: integer }
+              errors:      { type: integer }
+              errorRate:   { type: string }
+        domainEvents: { type: object }
+        tierUsage:
+          type: object
+          properties:
+            free:       { type: integer }
+            premium:    { type: integer }
+            enterprise: { type: integer }
+
+# ── Paths ─────────────────────────────────────────────────────────────────
+security:
+  - BearerAuth: []
+
+paths:
+  # ── Auth ────────────────────────────────────────────────────────────────
+  /api/auth/register:
+    post:
+      tags: [Authentication]
+      summary: Register with email and password
+      x-wso2-throttling-tier: 20PerMin
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name, email, password]
+              properties:
+                name:     { type: string }
+                email:    { type: string, format: email }
+                password: { type: string, minLength: 6 }
+      responses:
+        "201":
+          description: User registered
+        "409":
+          description: Email already in use
+
+  /api/auth/login:
+    post:
+      tags: [Authentication]
+      summary: Login with email and password
+      x-wso2-throttling-tier: 10PerMin
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password]
+              properties:
+                email:    { type: string, format: email }
+                password: { type: string }
+      responses:
+        "200":
+          description: Tokens returned
+        "401":
+          description: Invalid credentials
+
+  /api/auth/refresh:
+    post:
+      tags: [Authentication]
+      summary: Refresh access token
+      x-wso2-throttling-tier: 20PerMin
+      security: []
+      responses:
+        "200": { description: New access token issued }
+        "401": { description: Invalid or expired refresh token }
+
+  /api/auth/me:
+    get:
+      tags: [Authentication]
+      summary: Get current user profile
+      responses:
+        "200":
+          description: Current user
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/User" }
+
+  # ── Applications ─────────────────────────────────────────────────────────
+  /api/applications:
+    get:
+      tags: [Applications]
+      summary: List all applications for the authenticated student
+      x-wso2-throttling-tier: Gold
+      parameters:
+        - in: query
+          name: status
+          schema: { type: string }
+        - in: query
+          name: roleType
+          schema: { type: string }
+        - in: query
+          name: search
+          schema: { type: string }
+      responses:
+        "200":
+          description: Applications list
+          headers:
+            X-Quota-Tier:      { $ref: "#/components/headers/X-Quota-Tier" }
+            X-Quota-Remaining: { $ref: "#/components/headers/X-Quota-Remaining" }
+
+    post:
+      tags: [Applications]
+      summary: Create a new application
+      x-wso2-throttling-tier: Silver
+      description: |
+        **Quota-counted** — each POST increments the caller's daily write quota.
+        Free tier: 100/day. Premium: 10,000/day. Enterprise: unlimited.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/Application" }
+      responses:
+        "201":
+          description: Application created
+        "429":
+          description: Daily quota exceeded
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/QuotaExceeded" }
+
+  /api/applications/{id}:
+    put:
+      tags: [Applications]
+      summary: Update an application (quota-counted)
+      x-wso2-throttling-tier: Silver
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/Application" }
+      responses:
+        "200": { description: Updated }
+        "429":
+          description: Quota exceeded
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/QuotaExceeded" }
+
+    delete:
+      tags: [Applications]
+      summary: Delete an application (quota-counted)
+      x-wso2-throttling-tier: Silver
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: string }
+      responses:
+        "200": { description: Deleted }
+        "404": { description: Not found }
+
+  # ── Analytics ─────────────────────────────────────────────────────────────
+  /api/analytics:
+    get:
+      tags: [Analytics]
+      summary: Get analytics for the authenticated user
+      x-wso2-throttling-tier: Gold
+      responses:
+        "200":
+          description: Analytics data
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/AnalyticsSummary" }
+
+  # ── Admin / Metrics ───────────────────────────────────────────────────────
+  /api/metrics:
+    get:
+      tags: [Admin, Observability]
+      summary: Full system metrics snapshot (admin only)
+      x-wso2-throttling-tier: Gold
+      responses:
+        "200":
+          description: Metrics snapshot
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/MetricsSnapshot" }
+        "403": { description: Admin role required }
+
+  /api/metrics/events:
+    get:
+      tags: [Admin, Observability]
+      summary: Domain event audit log (admin only)
+      x-wso2-throttling-tier: Gold
+      parameters:
+        - in: query
+          name: limit
+          schema: { type: integer, default: 50, maximum: 200 }
+      responses:
+        "200":
+          description: Event log
+        "403": { description: Admin role required }
+
+  /api/metrics/security:
+    get:
+      tags: [Admin, Observability]
+      summary: Security event log — failed auth and quota breaches (admin only)
+      x-wso2-throttling-tier: Gold
+      responses:
+        "200": { description: Security events }
+        "403": { description: Admin role required }
+
+  /api/admin/dashboard:
+    get:
+      tags: [Admin]
+      summary: Platform-level user and application stats (admin only)
+      x-wso2-throttling-tier: Gold
+      responses:
+        "200": { description: Admin dashboard stats }
+        "403": { description: Admin role required }

@@ -1,9 +1,54 @@
-schemaVersion: 1.0
-name: smart-internship-tracker-backend
-type: Service
-buildPack: NodeJS
-language: JavaScript
-languageVersion: "18"
-port: 5000
-buildCommand: npm ci
-startCommand: node src/server.js
+schemaVersion: 1.1
+
+components:
+  # ── Component 1: Node.js API Backend ─────────────────────────────────────
+  - name: internship-backend
+    type: Service
+    buildPack: NodeJS
+    language: JavaScript
+    languageVersion: "20"
+    port: 5001
+    buildCommand: npm ci --prefix server
+    startCommand: node server/src/server.js
+    endpoints:
+      - name: rest-api
+        port: 5001
+        type: REST
+        networkVisibility: Public
+        context: /api
+        schemaFilePath: apim/openapi.yaml
+
+  # ── Component 2: Ballerina Analytics Service ──────────────────────────────
+  - name: analytics-service
+    type: Service
+    buildPack: Ballerina
+    language: Ballerina
+    languageVersion: "2201.8.0"
+    path: analytics-service
+    port: 8080
+    endpoints:
+      - name: analytics-rest
+        port: 8080
+        type: REST
+        networkVisibility: Organization
+        context: /analytics
+
+  # ── Component 3: React Frontend (SPA) ────────────────────────────────────
+  - name: internship-frontend
+    type: WebApp
+    buildPack: React
+    language: JavaScript
+    path: client
+    port: 80
+    buildCommand: npm ci && npm run build
+    buildOutput: dist
+    endpoints:
+      - name: spa
+        port: 80
+        type: REST
+        networkVisibility: Public
+        context: /
+
+# ── Shared configuration ──────────────────────────────────────────────────
+# Environment variables are injected by Choreo's secret management.
+# Reference them in each component's environment config in the Choreo console.
