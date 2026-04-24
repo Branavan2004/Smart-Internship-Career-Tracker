@@ -30,6 +30,12 @@ const applicationSchema = new mongoose.Schema(
       ref: "User",
       required: true
     },
+    // Tenant isolation — scoped alongside the user's tenantId
+    tenantId: {
+      type: String,
+      index: true,
+      default: "default"
+    },
     companyName: {
       type: String,
       required: true,

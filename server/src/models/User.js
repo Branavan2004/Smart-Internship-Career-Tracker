@@ -1,6 +1,8 @@
 import bcrypt from "bcryptjs";
 import mongoose from "mongoose";
 
+const TIERS = ["free", "premium", "enterprise"];
+
 const userSchema = new mongoose.Schema(
   {
     name: {
@@ -30,6 +32,27 @@ const userSchema = new mongoose.Schema(
       enum: ["student", "admin", "reviewer"],
       default: "student",
       required: true
+    },
+    // Multi-tenancy — logical tenant isolation
+    tenantId: {
+      type: String,
+      index: true,
+      default: "default"
+    },
+    // API Monetization tier
+    tier: {
+      type: String,
+      enum: TIERS,
+      default: "free"
+    },
+    // Daily write quota tracking (resets each UTC day)
+    quotaUsed: {
+      type: Number,
+      default: 0
+    },
+    quotaResetAt: {
+      type: Date,
+      default: null
     },
     profilePicture: {
       type: String,
