@@ -4,9 +4,9 @@ import passport from "passport";
 import { connectDatabase } from "./config/db.js";
 import { setupAsgardeoStrategy } from "./config/asgardeo.js";
 
-dotenv.config();
-
-const port = process.env.PORT || 5001;
+// FORCE the port to 5001 to match the Choreo API Gateway Endpoint.
+// Choreo injects process.env.PORT=8080, which causes routing errors.
+const port = 5001;
 
 // Debug: log which env vars are present (not values, just keys)
 console.log("=== SERVER STARTUP ===");
