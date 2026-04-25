@@ -6,7 +6,7 @@ import { setupAsgardeoStrategy } from "./config/asgardeo.js";
 
 dotenv.config();
 
-const port = process.env.PORT || 5001;
+const port = process.env.PORT || 5000;
 
 // Debug: log which env vars are present (not values, just keys)
 console.log("=== SERVER STARTUP ===");
