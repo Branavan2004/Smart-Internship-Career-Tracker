@@ -12,7 +12,7 @@ RUN npm ci --only=production
 COPY . .
 
 # Expose the backend port
-EXPOSE 5000
+EXPOSE 5001
 
 # Start the server using the entry point identified in package.json
 CMD ["node", "src/server.js"]
