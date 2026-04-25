@@ -25,6 +25,12 @@ export const AuthProvider = ({ children }) => {
     }
 
     try {
+      // Store the Asgardeo access token so the API interceptor can attach it to all requests
+      const accessToken = await getAccessToken();
+      if (accessToken) {
+        localStorage.setItem("careerTrackerToken", accessToken);
+      }
+
       const response = await apiClient.get("/auth/me");
       setUser(response.data.user);
     } catch (_error) {
