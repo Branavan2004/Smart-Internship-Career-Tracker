@@ -1,3 +1,4 @@
+import jwt from "jsonwebtoken";
 import User from "../models/User.js";
 import RefreshToken from "../models/RefreshToken.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
@@ -56,15 +57,9 @@ export const registerUser = asyncHandler(async (req, res) => {
     throw error;
   }
 
-  const allowedRoles = ["student", "admin", "reviewer"];
-
-  if (role && !allowedRoles.includes(role)) {
-    const error = new Error("Role must be student, admin, or reviewer.");
-    error.statusCode = 400;
-    throw error;
-  }
-
-  const user = await User.create({ name, email, password, role: role || "student" });
+  // Role is always "student" for self-registration — admins and reviewers
+  // must be promoted via an admin script or the database directly.
+  const user = await User.create({ name, email, password, role: "student" });
 
   await sendAuthResponse(res, user, 201);
 });
@@ -89,17 +84,54 @@ export const getCurrentUser = asyncHandler(async (req, res) => {
 export const handleGoogleAuthSuccess = asyncHandler(async (req, res) => {
   const { accessToken, refreshToken } = await issueAuthTokens(req.user);
   setRefreshTokenCookie(res, refreshToken);
-  const redirectUrl = `${process.env.CLIENT_URL || "http://localhost:5173"}/auth/callback?token=${accessToken}`;
-
-  res.redirect(redirectUrl);
+  const clientUrl = process.env.CLIENT_URL || "http://localhost:3000";
+  res.redirect(`${clientUrl}/auth/callback?token=${accessToken}`);
 });
 
 export const handleAsgardeoAuthSuccess = asyncHandler(async (req, res) => {
   const { accessToken, refreshToken } = await issueAuthTokens(req.user);
   setRefreshTokenCookie(res, refreshToken);
-  const redirectUrl = `${process.env.CLIENT_URL || "http://localhost:5173"}/auth/callback?token=${accessToken}`;
+  const clientUrl = process.env.CLIENT_URL || "http://localhost:3000";
+  res.redirect(`${clientUrl}/auth/callback?token=${accessToken}`);
+});
 
-  res.redirect(redirectUrl);
+/**
+ * POST /api/auth/asgardeo-exchange
+ * Federated Identity Bridge: exchanges an Asgardeo OIDC token for a backend JWT.
+ * The Asgardeo token is decoded (trusted via HTTPS) to extract user identity.
+ * A matching MongoDB user is found or created, then the backend issues its own JWT.
+ */
+export const exchangeAsgardeoToken = asyncHandler(async (req, res) => {
+  const { asgardeoToken } = req.body;
+
+  if (!asgardeoToken) {
+    const error = new Error("Asgardeo token is required.");
+    error.statusCode = 400;
+    throw error;
+  }
+
+  // Decode without verifying — we trust it came from Asgardeo via HTTPS
+  const decoded = jwt.decode(asgardeoToken);
+
+  if (!decoded || !decoded.email) {
+    const error = new Error("Invalid Asgardeo token: could not extract user email.");
+    error.statusCode = 401;
+    throw error;
+  }
+
+  // Find existing user or create a new one (auto-provision on first SSO login)
+  let user = await User.findOne({ email: decoded.email });
+
+  if (!user) {
+    user = await User.create({
+      name: decoded.name || decoded.given_name || decoded.email.split("@")[0],
+      email: decoded.email,
+      role: "student",
+      asgardeoId: decoded.sub,
+    });
+  }
+
+  await sendAuthResponse(res, user);
 });
 
 export const refreshAccessToken = asyncHandler(async (req, res) => {

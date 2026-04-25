@@ -4,6 +4,7 @@ import {
   getCurrentUser,
   handleGoogleAuthSuccess,
   handleAsgardeoAuthSuccess,
+  exchangeAsgardeoToken,
   loginUser,
   logoutUser,
   refreshAccessToken,
@@ -147,6 +148,9 @@ router.post("/login", authLimiter, loginBruteForceLimiter, loginValidationRules,
  *               $ref: '#/components/schemas/RateLimitResponse'
  */
 router.post("/refresh", refreshTokenLimiter, refreshAccessToken);
+
+// Asgardeo Token Exchange: convert Asgardeo OIDC token to backend JWT
+router.post("/asgardeo-exchange", authLimiter, exchangeAsgardeoToken);
 
 /**
  * @openapi

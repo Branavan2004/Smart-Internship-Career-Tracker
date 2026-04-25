@@ -25,17 +25,24 @@ export const AuthProvider = ({ children }) => {
     }
 
     try {
-      // Store the Asgardeo access token so the API interceptor can attach it to all requests
-      const accessToken = await getAccessToken();
-      if (accessToken) {
-        localStorage.setItem("careerTrackerToken", accessToken);
-      }
+      // Step 1: Get the Asgardeo access token
+      const asgardeoToken = await getAccessToken();
 
-      const response = await apiClient.get("/auth/me");
-      setUser(response.data.user);
+      if (asgardeoToken) {
+        // Step 2: Exchange it for a backend JWT that our middleware can verify
+        const exchangeResponse = await apiClient.post("/auth/asgardeo-exchange", {
+          asgardeoToken
+        });
+
+        const backendToken = exchangeResponse.data.accessToken || exchangeResponse.data.token;
+        if (backendToken) {
+          // Step 3: Store the backend JWT so the API interceptor picks it up
+          localStorage.setItem("careerTrackerToken", backendToken);
+          setUser(exchangeResponse.data.user);
+        }
+      }
     } catch (_error) {
-      // If backend fails but SDK is authenticated, we might have a sync issue
-      // but we shouldn't force sign out here unless necessary
+      console.error("Token exchange failed:", _error?.response?.data || _error.message);
     } finally {
       setLoading(false);
     }
