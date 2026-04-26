@@ -102,32 +102,23 @@ export const handleAsgardeoAuthSuccess = asyncHandler(async (req, res) => {
  * A matching MongoDB user is found or created, then the backend issues its own JWT.
  */
 export const exchangeAsgardeoToken = asyncHandler(async (req, res) => {
-  const { asgardeoToken } = req.body;
+  const { asgardeoToken, userInfo } = req.body;
 
-  if (!asgardeoToken) {
-    const error = new Error("Asgardeo token is required.");
+  if (!asgardeoToken || !userInfo || !userInfo.email) {
+    const error = new Error("Asgardeo token and user info (with email) are required.");
     error.statusCode = 400;
     throw error;
   }
 
-  // Decode without verifying — we trust it came from Asgardeo via HTTPS
-  const decoded = jwt.decode(asgardeoToken);
-
-  if (!decoded || !decoded.email) {
-    const error = new Error("Invalid Asgardeo token: could not extract user email.");
-    error.statusCode = 401;
-    throw error;
-  }
-
   // Find existing user or create a new one (auto-provision on first SSO login)
-  let user = await User.findOne({ email: decoded.email });
+  let user = await User.findOne({ email: userInfo.email });
 
   if (!user) {
     user = await User.create({
-      name: decoded.name || decoded.given_name || decoded.email.split("@")[0],
-      email: decoded.email,
+      name: userInfo.name || userInfo.given_name || userInfo.email.split("@")[0],
+      email: userInfo.email,
       role: "student",
-      asgardeoId: decoded.sub,
+      asgardeoId: userInfo.sub,
     });
   }
 

@@ -25,13 +25,15 @@ export const AuthProvider = ({ children }) => {
     }
 
     try {
-      // Step 1: Get the Asgardeo access token
+      // Step 1: Get the Asgardeo access token and user info
       const asgardeoToken = await getAccessToken();
+      const userInfo = await getBasicUserInfo();
 
-      if (asgardeoToken) {
+      if (asgardeoToken && userInfo) {
         // Step 2: Exchange it for a backend JWT that our middleware can verify
         const exchangeResponse = await apiClient.post("/auth/asgardeo-exchange", {
-          asgardeoToken
+          asgardeoToken,
+          userInfo
         });
 
         const backendToken = exchangeResponse.data.accessToken || exchangeResponse.data.token;
