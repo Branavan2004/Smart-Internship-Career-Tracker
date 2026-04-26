@@ -1,6 +1,8 @@
 # Smart Internship & Career Ecosystem
 
-A **production-grade, multi-tenant SaaS platform** for internship and career tracking, built on the full WSO2 technology stack. Demonstrates enterprise engineering patterns including event-driven architecture, API monetisation, multi-tenancy, and real-time observability.
+A **production-grade, multi-tenant SaaS platform** for internship and career tracking, built on the full WSO2 technology stack. Demonstrates enterprise engineering patterns including event-driven architecture, API monetisation, multi-tenancy, real-time observability, and **federated identity with Asgardeo**.
+
+🚀 **Live Deployment:** [Smart Internship Tracker on WSO2 Choreo](https://33cc0d8e-a16a-40d7-a552-06910eed4a61.e1-us-east-azure.choreoapps.dev/)
 
 [![Architecture](https://img.shields.io/badge/docs-architecture-blue)](./docs/architecture.md)
 [![OpenAPI](https://img.shields.io/badge/API-OpenAPI%203.0-green)](./apim/openapi.yaml)
@@ -28,8 +30,11 @@ Three tiers — **Free** (100 writes/day), **Premium** (10,000/day), **Enterpris
 - **Domain event log**: The last 200 events with payload, accessible via `/api/metrics/events`
 - **Security log**: Failed auth attempts and quota breaches, visible in the Admin console
 
-### 🔐 Security That Goes Beyond OAuth2
-Beyond OIDC: JWT validation middleware with access logging, brute-force protection (separate rate-limit bucket for failed logins), `logUnauthorizedAttempt()` that feeds the security event store, Helmet headers, and scope-based RBAC across all routes.
+### 🔐 Enterprise Grade Security & Identity (Asgardeo)
+- **Federated Identity**: Authentication is fully offloaded to **WSO2 Asgardeo**.
+- **JWKS Verification**: The Node.js backend cryptographically verifies Asgardeo tokens using WSO2's public keys via the `jwks-rsa` caching client.
+- **Auto-Provisioning**: Users who log in via SSO are automatically provisioned in the MongoDB `User` collection.
+- Beyond OIDC: Includes brute-force protection (separate rate-limit bucket for failed logins), `logUnauthorizedAttempt()` that feeds the security event store, Helmet headers, and scope-based RBAC across all routes.
 
 ### ☁️ Ballerina Microservice
 The `analytics-service` is written in idiomatic Ballerina — not Node.js with a `.bal` extension. It demonstrates:
@@ -44,13 +49,13 @@ The `analytics-service` is written in idiomatic Ballerina — not Node.js with a
 
 | Layer | Technology |
 |---|---|
-| Identity | WSO2 Asgardeo (OIDC), Google OAuth2, Local JWT |
+| Identity | **WSO2 Asgardeo** (OIDC + JWKS) |
 | API Gateway | WSO2 API Manager (throttling, monetisation, OpenAPI) |
-| Deployment | WSO2 Choreo (multi-component, CI/CD, observability) |
+| Deployment | **WSO2 Choreo** (Cloud deployment on Azure, Auto-builds) |
 | Analytics Service | **Ballerina** 2201.8 |
 | Backend | Node.js / Express (monolith + microservice stubs) |
 | Frontend | React 18 + Vite (role-based dashboards, Kanban, Recharts) |
-| Database | MongoDB with Mongoose (tenantId-indexed collections) |
+| Database | MongoDB Atlas |
 | Containerisation | Docker + Docker Compose |
 
 ---
