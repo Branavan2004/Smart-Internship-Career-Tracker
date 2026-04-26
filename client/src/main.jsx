@@ -13,12 +13,14 @@ import "./styles/index.css";
 // Initialize Global Interceptors
 setupInterceptors(apiClient);
 
+const redirectUrl = typeof window !== "undefined" ? window.location.origin : import.meta.env.VITE_ASGARDEO_REDIRECT_URL || "http://localhost:5173";
+
 const asgardeoConfig = {
-    signInRedirectURL: import.meta.env.VITE_ASGARDEO_REDIRECT_URL || "http://localhost:5173",
-    signOutRedirectURL: import.meta.env.VITE_ASGARDEO_REDIRECT_URL || "http://localhost:5173",
+    signInRedirectURL: redirectUrl,
+    signOutRedirectURL: redirectUrl,
     clientID: import.meta.env.VITE_ASGARDEO_CLIENT_ID || "your_client_id",
     baseUrl: import.meta.env.VITE_ASGARDEO_BASE_URL || "https://api.asgardeo.io/t/your_tenant",
-    scope: [ "openid", "profile" ]
+    scope: [ "openid", "profile", "email" ]
 };
 
 ReactDOM.createRoot(document.getElementById("root")).render(
