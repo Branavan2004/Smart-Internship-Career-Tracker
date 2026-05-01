@@ -16,45 +16,32 @@ const KanbanBoard = ({ applications, onEdit, onStatusChange }) => {
     }
 
     const newStatus = destination.droppableId;
-    
-    // Trigger optimistic status update
     onStatusChange(draggableId, newStatus);
   };
 
   return (
-    <section className="panel kanban-panel">
-      <div className="panel-header">
-        <div>
-          <p className="eyebrow">Application tracker</p>
-          <h2>Everything in your pipeline</h2>
+    <div className="kanban-board-container pb-4">
+      <DragDropContext onDragEnd={handleDragEnd}>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 min-w-[1000px]">
+          {statusOptions.map((status) => {
+            if (status === "Offer") return null;
+
+            const columnApps = applications.filter(
+              (app) => app.status === status
+            );
+
+            return (
+              <KanbanColumn
+                key={status}
+                status={status}
+                applications={columnApps}
+                onEdit={onEdit}
+              />
+            );
+          })}
         </div>
-      </div>
-      
-      <div className="kanban-board-container">
-        <DragDropContext onDragEnd={handleDragEnd}>
-          <div className="kanban-board">
-            {statusOptions.map((status) => {
-              // We only want the 4 main statuses, not 'Offer' if there are 4 columns.
-              // Wait, the prompt said "Four columns, one per status: Pending, Interviewed, Accepted, Rejected"
-              if (status === "Offer") return null;
-
-              const columnApps = applications.filter(
-                (app) => app.status === status
-              );
-
-              return (
-                <KanbanColumn
-                  key={status}
-                  status={status}
-                  applications={columnApps}
-                  onEdit={onEdit}
-                />
-              );
-            })}
-          </div>
-        </DragDropContext>
-      </div>
-    </section>
+      </DragDropContext>
+    </div>
   );
 };
 

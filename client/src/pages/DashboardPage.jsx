@@ -16,16 +16,13 @@ import ApplicationForm from "../components/ApplicationForm";
 import ApplicationsTable from "../components/ApplicationsTable";
 import KanbanBoard from "../components/KanbanBoard";
 import EmptyState from "../components/EmptyState";
-import StatCard from "../components/StatCard";
-import { emptyApplication, roleTypeOptions, statusOptions } from "../utils/constants";
+import { emptyApplication } from "../utils/constants";
 import { useToast } from "../context/ToastContext";
 import { recalculateAnalytics } from "../utils/analyticsHelper";
 
 import GroupBasedView from "../components/GroupBasedView";
 import AdminDashboardPage from "./AdminDashboardPage";
 import ReviewQueuePage from "./ReviewQueuePage";
-
-const chartColors = ["#ff7a59", "#ffb347", "#5ec4ff", "#24b47e", "#f15bb5", "#6a4c93"];
 
 const StudentDashboard = () => {
   const [applications, setApplications] = useState([]);
@@ -49,7 +46,6 @@ const StudentDashboard = () => {
     search: ""
   });
 
-  // Bug #6: We keep a separate "committed" search that only updates after debounce
   const [committedSearch, setCommittedSearch] = useState("");
   const searchDebounceRef = useRef(null);
 
@@ -92,27 +88,10 @@ const StudentDashboard = () => {
     }
   };
 
-  // Bug #6: Only fire on committed search + select filters, not on every keystroke
   useEffect(() => {
     loadDashboard();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filters.status, filters.roleType, committedSearch]);
-
-  const handleFilterChange = (event) => {
-    const { name, value } = event.target;
-
-    if (name === "search") {
-      // Update local display immediately, but debounce the API call
-      setFilters((current) => ({ ...current, search: value }));
-      if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current);
-      searchDebounceRef.current = setTimeout(() => {
-        setCommittedSearch(value);
-      }, 400);
-    } else {
-      // Status / roleType selects fire immediately
-      setFilters((current) => ({ ...current, [name]: value }));
-    }
-  };
 
   const handleSaveApplication = async (payload) => {
     const isEditing = !!editingApplication?._id;
@@ -122,7 +101,6 @@ const StudentDashboard = () => {
     let previousAnalytics = null;
 
     if (isEditing) {
-      // Optimistic update for edits
       previousApplications = [...applications];
       previousAnalytics = { ...analytics };
 
@@ -159,7 +137,6 @@ const StudentDashboard = () => {
     const previousApplications = [...applications];
     const previousAnalytics = { ...analytics };
 
-    // Optimistically update
     const updatedApps = applications.map((app) => 
       app._id === applicationId ? { ...app, status: newStatus } : app
     );
@@ -184,7 +161,6 @@ const StudentDashboard = () => {
     const previousApplications = [...applications];
     const previousAnalytics = { ...analytics };
 
-    // Optimistically update
     const updatedApps = applications.filter((app) => app._id !== applicationId);
     setApplications(updatedApps);
     setAnalytics(recalculateAnalytics(updatedApps));
@@ -199,7 +175,6 @@ const StudentDashboard = () => {
     }
   };
 
-  // Bug #9: Safely read the nested count and display it correctly
   const handleSendReminder = async () => {
     try {
       const response = await apiClient.post("/reminders/send");
@@ -211,227 +186,272 @@ const StudentDashboard = () => {
   };
 
   return (
-    <div className="page-stack">
-      <section className="hero-panel">
-        <div>
-          <p className="eyebrow">Dashboard</p>
-          <h2>Your internship search at a glance</h2>
-          <p>
-            Track outcomes, monitor interviews, and keep notes close to the application that generated them.
-          </p>
-        </div>
-        <div className="hero-actions">
-          <button type="button" className="secondary-button" onClick={() => setEditingApplication({ ...emptyApplication })}>
-            New application
-          </button>
-          <button type="button" className="ghost-button" onClick={handleSendReminder}>
-            Simulate reminder email
-          </button>
-        </div>
-      </section>
+    <div className="flex flex-col">
+      {/* Dashboard Header */}
+      <div className="flex flex-col mb-10">
+        <span className="font-mono-sm text-primary uppercase tracking-[0.2em] mb-2">Workspace / Analytics</span>
+        <h1 className="font-h1 text-on-background">Performance Overview</h1>
+      </div>
 
-      <section className="stats-grid">
-        <StatCard label="Total applications" value={analytics.stats.total} accent="linear-gradient(135deg, #ff7a59, #ffd166)" isEmpty={applications.length === 0} />
-        <StatCard label="Pending" value={analytics.stats.pending} accent="linear-gradient(135deg, #ffd166, #f4a261)" isEmpty={applications.length === 0} />
-        <StatCard label="Interviewed" value={analytics.stats.interviewed} accent="linear-gradient(135deg, #5ec4ff, #2a9d8f)" isEmpty={applications.length === 0} />
-        <StatCard label="Success rate" value={`${analytics.stats.successRate}%`} accent="linear-gradient(135deg, #24b47e, #a7f3d0)" isEmpty={applications.length === 0} />
-      </section>
-
-      <section className="panel filter-panel">
-        <div className="section-title-row" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <h3>Filters</h3>
-          <div className="view-toggle" style={{ display: 'flex', gap: '8px' }}>
-            <button 
-              type="button"
-              className="view-toggle-btn"
-              style={{
-                background: viewMode === 'table' ? 'rgba(249, 115, 22, 0.15)' : 'transparent',
-                color: viewMode === 'table' ? '#f97316' : '#55637e',
-                border: `1px solid ${viewMode === 'table' ? '#f97316' : 'rgba(255,255,255,0.1)'}`,
-                padding: '6px',
-                borderRadius: '6px',
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                transition: 'all 0.2s ease'
-              }}
-              onClick={() => setViewMode('table')}
-              title="Table View"
-            >
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>
-            </button>
-            <button 
-              type="button"
-              className="view-toggle-btn"
-              style={{
-                background: viewMode === 'board' ? 'rgba(249, 115, 22, 0.15)' : 'transparent',
-                color: viewMode === 'board' ? '#f97316' : '#55637e',
-                border: `1px solid ${viewMode === 'board' ? '#f97316' : 'rgba(255,255,255,0.1)'}`,
-                padding: '6px',
-                borderRadius: '6px',
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                transition: 'all 0.2s ease'
-              }}
-              onClick={() => setViewMode('board')}
-              title="Board View"
-            >
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="9" y1="3" x2="9" y2="21"></line></svg>
-            </button>
+      {/* Key Metrics Bento */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-10">
+        <div className="glass-card p-6 rounded-xl flex flex-col gap-2 group hover:border-violet-500/30 transition-all duration-300">
+          <div className="flex items-center justify-between">
+            <span className="text-neutral-400 text-[10px] font-bold uppercase tracking-widest">Total Applications</span>
+            <span className="material-symbols-outlined text-primary text-lg">trending_up</span>
+          </div>
+          <div className="flex items-baseline gap-2">
+            <span className="font-display text-3xl">{analytics.stats.total}</span>
+            <span className="text-xs text-tertiary font-bold">+12%</span>
           </div>
         </div>
-        <div className="field-grid">
-          <label>
-            Search
-            {/* Bug #6: value comes from display state (filters.search), not committed state */}
-            <input name="search" value={filters.search} onChange={handleFilterChange} placeholder="Company or role" />
-          </label>
-          <label>
-            Status
-            <select name="status" value={filters.status} onChange={handleFilterChange}>
-              <option value="">All</option>
-              {statusOptions.map((option) => (
-                <option key={option} value={option}>
-                  {option}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label>
-            Role type
-            <select name="roleType" value={filters.roleType} onChange={handleFilterChange}>
-              <option value="">All</option>
-              {roleTypeOptions.map((option) => (
-                <option key={option} value={option}>
-                  {option}
-                </option>
-              ))}
-            </select>
-          </label>
+        
+        <div className="glass-card p-6 rounded-xl flex flex-col gap-2 group hover:border-violet-500/30 transition-all duration-300">
+          <div className="flex items-center justify-between">
+            <span className="text-neutral-400 text-[10px] font-bold uppercase tracking-widest">Pending Response</span>
+            <span className="material-symbols-outlined text-secondary text-lg">bolt</span>
+          </div>
+          <div className="flex items-baseline gap-2">
+            <span className="font-display text-3xl">{analytics.stats.pending}</span>
+            <span className="text-xs text-tertiary font-bold">+5%</span>
+          </div>
         </div>
-      </section>
 
-      {editingApplication ? (
-        <ApplicationForm
-          initialValues={editingApplication._id ? editingApplication : null}
-          onSubmit={handleSaveApplication}
-          onCancel={() => setEditingApplication(null)}
-          saving={saving}
-        />
-      ) : null}
+        <div className="glass-card p-6 rounded-xl flex flex-col gap-2 group hover:border-violet-500/30 transition-all duration-300">
+          <div className="flex items-center justify-between">
+            <span className="text-neutral-400 text-[10px] font-bold uppercase tracking-widest">Interview Invites</span>
+            <span className="material-symbols-outlined text-fuchsia-400 text-lg">mail</span>
+          </div>
+          <div className="flex items-baseline gap-2">
+            <span className="font-display text-3xl">{analytics.stats.interviewed}</span>
+            <span className="text-xs text-neutral-400 font-bold">Stable</span>
+          </div>
+        </div>
 
-      <section className="chart-grid">
-        <article className="panel chart-panel">
-          <div className="panel-header">
+        <div className="glass-card p-6 rounded-xl flex flex-col gap-2 group hover:border-violet-500/30 transition-all duration-300">
+          <div className="flex items-center justify-between">
+            <span className="text-neutral-400 text-[10px] font-bold uppercase tracking-widest">Success Rate</span>
+            <span className="material-symbols-outlined text-tertiary text-lg">star</span>
+          </div>
+          <div className="flex items-baseline gap-2">
+            <span className="font-display text-3xl">{analytics.stats.successRate}%</span>
+            <span className="text-xs text-error font-bold">-1.2%</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Main Analytics Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 mb-10">
+        <div className="lg:col-span-8 glass-card rounded-2xl p-8 relative overflow-hidden">
+          <div className="flex items-center justify-between mb-8">
             <div>
-              <p className="eyebrow">Role breakdown</p>
-              <h2>Where you are applying</h2>
+              <h3 className="font-h3 text-on-background">Role breakdown</h3>
+              <p className="text-neutral-500 text-xs">Submission trends by category</p>
+            </div>
+            <div className="flex gap-2">
+               <button 
+                onClick={() => setViewMode(viewMode === 'table' ? 'board' : 'table')}
+                className="bg-white/5 border border-white/10 rounded-lg text-xs font-mono-sm py-1 px-3 hover:bg-white/10 transition-colors"
+               >
+                 Switch to {viewMode === 'table' ? 'Board' : 'Table'}
+               </button>
             </div>
           </div>
-          <ResponsiveContainer width="100%" height={260}>
-            <BarChart data={analytics.roleBreakdown}>
-              <CartesianGrid strokeDasharray="3 3" vertical={false} />
-              <XAxis dataKey="name" />
-              <YAxis allowDecimals={false} />
-              <Tooltip />
-              <Bar dataKey="value" radius={[12, 12, 0, 0]}>
-                {analytics.roleBreakdown.map((entry, index) => (
-                  <Cell key={entry.name} fill={chartColors[index % chartColors.length]} />
-                ))}
-              </Bar>
-            </BarChart>
-          </ResponsiveContainer>
-        </article>
-
-        <article className="panel chart-panel">
-          <div className="panel-header">
-            <div>
-              <p className="eyebrow">Rejection signals</p>
-              <h2>Why applications stall</h2>
-            </div>
-          </div>
-          <ResponsiveContainer width="100%" height={260}>
-            <PieChart>
-              <Pie
-                data={analytics.rejectionReasons.length ? analytics.rejectionReasons : [{ name: "No data yet", value: 1 }]}
-                dataKey="value"
-                nameKey="name"
-                innerRadius={55}
-                outerRadius={90}
-                paddingAngle={3}
-              >
-                {(analytics.rejectionReasons.length ? analytics.rejectionReasons : [{ name: "No data yet", value: 1 }]).map((entry, index) => (
-                  <Cell key={entry.name} fill={chartColors[index % chartColors.length]} />
-                ))}
-              </Pie>
-              <Tooltip />
-            </PieChart>
-          </ResponsiveContainer>
-        </article>
-      </section>
-
-      <section className="panel">
-        <div className="panel-header">
-          <div>
-            <p className="eyebrow">Upcoming reminders</p>
-            <h2>{reminders.count} item(s) need attention this week</h2>
+          
+          <div className="h-[300px] w-full">
+             <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={analytics.roleBreakdown}>
+                   <defs>
+                    <linearGradient id="barGradient" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="#7c3aed" stopOpacity={0.8}/>
+                      <stop offset="100%" stopColor="#7c3aed" stopOpacity={0.1}/>
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(255,255,255,0.05)" />
+                  <XAxis 
+                    dataKey="name" 
+                    axisLine={false} 
+                    tickLine={false} 
+                    tick={{fill: '#888', fontSize: 10, fontWeight: 'bold'}}
+                  />
+                  <YAxis 
+                    axisLine={false} 
+                    tickLine={false} 
+                    tick={{fill: '#888', fontSize: 10}}
+                  />
+                  <Tooltip 
+                    contentStyle={{ backgroundColor: 'rgba(19, 19, 19, 0.85)', backdropFilter: 'blur(24px)', border: '1px solid rgba(210, 187, 255, 0.3)', borderRadius: '12px' }}
+                    itemStyle={{ color: '#cfbcff' }}
+                  />
+                  <Bar dataKey="value" fill="url(#barGradient)" radius={[6, 6, 0, 0]} />
+                </BarChart>
+             </ResponsiveContainer>
           </div>
         </div>
 
-        {reminders.summary.length === 0 ? (
-          <p className="muted-text">No interviews or follow-ups scheduled in the next 7 days.</p>
-        ) : (
-          <div className="reminder-list">
-            {reminders.summary.map((item) => (
-              <article className="reminder-card" key={`${item.companyName}-${item.role}`}>
-                <strong>{item.companyName}</strong>
-                <span>{item.role}</span>
-                <small>{item.status}</small>
-              </article>
+        <div className="lg:col-span-4 glass-card rounded-2xl p-8 flex flex-col">
+          <h3 className="font-h3 text-on-background mb-1">Application Funnel</h3>
+          <p className="text-neutral-500 text-xs mb-10">Current pipeline status breakdown</p>
+          
+          <div className="relative w-48 h-48 mx-auto mb-10">
+            <ResponsiveContainer width="100%" height="100%">
+              <PieChart>
+                <Pie
+                  data={[
+                    { name: "Pending", value: analytics.stats.pending }, 
+                    { name: "Interview", value: analytics.stats.interviewed }, 
+                    { name: "Offer", value: analytics.stats.offer }
+                  ]}
+                  innerRadius={60}
+                  outerRadius={80}
+                  paddingAngle={5}
+                  dataKey="value"
+                  stroke="none"
+                >
+                  <Cell fill="#7c3aed" />
+                  <Cell fill="#adc6ff" />
+                  <Cell fill="#dfed1a" />
+                </Pie>
+                <Tooltip 
+                  contentStyle={{ backgroundColor: 'rgba(19, 19, 19, 0.85)', backdropFilter: 'blur(24px)', border: '1px solid rgba(210, 187, 255, 0.3)', borderRadius: '12px' }}
+                  itemStyle={{ color: '#cfbcff' }}
+                />
+              </PieChart>
+            </ResponsiveContainer>
+            <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+              <span className="font-display text-3xl text-on-background">{analytics.stats.total}</span>
+              <span className="text-[10px] uppercase tracking-widest text-neutral-400 font-bold">Total</span>
+            </div>
+          </div>
+
+          <div className="space-y-4">
+             <div className="flex items-center justify-between group cursor-pointer hover:bg-white/5 p-2 rounded-lg transition-colors">
+              <div className="flex items-center gap-3">
+                <div className="w-2.5 h-2.5 rounded-full bg-primary shadow-[0_0_8px_rgba(124,58,237,0.4)]"></div>
+                <span className="text-sm font-medium">Pending</span>
+              </div>
+              <span className="font-mono-sm text-neutral-300">{analytics.stats.pending}</span>
+            </div>
+            <div className="flex items-center justify-between group cursor-pointer hover:bg-white/5 p-2 rounded-lg transition-colors">
+              <div className="flex items-center gap-3">
+                <div className="w-2.5 h-2.5 rounded-full bg-secondary shadow-[0_0_8px_rgba(173,198,255,0.4)]"></div>
+                <span className="text-sm font-medium">Interview</span>
+              </div>
+              <span className="font-mono-sm text-neutral-300">{analytics.stats.interviewed}</span>
+            </div>
+            <div className="flex items-center justify-between group cursor-pointer hover:bg-white/5 p-2 rounded-lg transition-colors">
+              <div className="flex items-center gap-3">
+                <div className="w-2.5 h-2.5 rounded-full bg-tertiary shadow-[0_0_8px_rgba(223,237,26,0.4)]"></div>
+                <span className="text-sm font-medium">Offer</span>
+              </div>
+              <span className="font-mono-sm text-neutral-300">{analytics.stats.offer}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Secondary Insights Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-10">
+        <div className="lg:col-span-1 glass-card rounded-2xl p-6">
+          <div className="flex items-center justify-between mb-6">
+            <h4 className="text-xs font-bold uppercase tracking-widest text-neutral-400">Application Mix</h4>
+            <span className="material-symbols-outlined text-neutral-500">lightbulb</span>
+          </div>
+          <div className="space-y-6">
+            {analytics.roleBreakdown.map((item) => (
+              <div className="space-y-2" key={item.name}>
+                <div className="flex justify-between text-sm">
+                  <span>{item.name}</span>
+                  <span className="text-neutral-400 text-xs">
+                    {Math.round((item.value / (analytics.stats.total || 1)) * 100)}%
+                  </span>
+                </div>
+                <div className="w-full h-2.5 bg-white/5 rounded-full overflow-hidden">
+                  <div 
+                    className="h-full bg-gradient-to-r from-violet-600 to-violet-400 rounded-full transition-all duration-500" 
+                    style={{ width: `${(item.value / (analytics.stats.total || 1)) * 100}%` }}
+                  ></div>
+                </div>
+              </div>
             ))}
           </div>
-        )}
-      </section>
+        </div>
 
-      {/* Bug #11: Loading indicator sits inside the table section, not after it */}
-      <div style={{ position: "relative" }}>
-        {applications.length === 0 && !loading ? (
-          <EmptyState onAddFirst={() => setEditingApplication({ ...emptyApplication })} />
-        ) : viewMode === 'table' ? (
-          <ApplicationsTable 
-            applications={applications} 
-            onEdit={setEditingApplication} 
-            onDelete={handleDelete} 
-            onStatusChange={handleStatusChange}
-          />
-        ) : (
-          <KanbanBoard
-            applications={applications} 
-            onEdit={setEditingApplication} 
-            onStatusChange={handleStatusChange}
-          />
-        )}
-        {loading ? (
-          <div
-            style={{
-              position: "absolute",
-              inset: 0,
-              display: "grid",
-              placeItems: "center",
-              borderRadius: "28px",
-              background: "rgba(248, 251, 255, 0.72)",
-              backdropFilter: "blur(4px)",
-              fontSize: "0.95rem",
-              color: "#55637e"
-            }}
-          >
-            Refreshing…
+        <div className="lg:col-span-2 glass-card rounded-2xl p-6">
+          <div className="flex items-center justify-between mb-6">
+            <h4 className="text-xs font-bold uppercase tracking-widest text-neutral-400">Upcoming Timeline</h4>
+            <button className="text-[10px] text-primary hover:underline uppercase font-bold tracking-widest" onClick={handleSendReminder}>
+              Trigger Digest
+            </button>
           </div>
-        ) : null}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {reminders.summary.slice(0, 4).map((item, idx) => (
+              <div key={idx} className="flex items-start gap-4 p-4 rounded-xl border border-white/10 bg-white/5 hover:border-white/20 transition-all">
+                <div className="w-12 h-12 rounded-xl bg-surface-container flex items-center justify-center shrink-0 border border-white/5 shadow-inner">
+                  <span className="material-symbols-outlined text-secondary">
+                    {item.status.includes("Interview") ? "corporate_fare" : "event"}
+                  </span>
+                </div>
+                <div>
+                  <p className="text-sm font-semibold mb-1 truncate max-w-[150px]">{item.companyName}</p>
+                  <p className="text-[10px] text-neutral-500 font-mono-sm flex items-center gap-2">
+                    <span className={`w-1.5 h-1.5 rounded-full ${item.status.includes("Interview") ? "bg-tertiary/50" : "bg-neutral-600"}`}></span> 
+                    {item.role} • {item.status}
+                  </p>
+                </div>
+              </div>
+            ))}
+            {reminders.summary.length === 0 && (
+              <div className="col-span-2 py-8 text-center text-neutral-500 text-sm italic">
+                No scheduled activities for the coming week.
+              </div>
+            )}
+          </div>
+        </div>
       </div>
+
+      {/* Main View Area (Table or Board) */}
+      <div className="relative">
+         {applications.length === 0 && !loading ? (
+            <EmptyState onAddFirst={() => setEditingApplication({ ...emptyApplication })} />
+          ) : viewMode === 'table' ? (
+            <div className="glass-card rounded-2xl overflow-hidden">
+              <ApplicationsTable 
+                applications={applications} 
+                onEdit={setEditingApplication} 
+                onDelete={handleDelete} 
+                onStatusChange={handleStatusChange}
+              />
+            </div>
+          ) : (
+            <KanbanBoard
+              applications={applications} 
+              onEdit={setEditingApplication} 
+              onStatusChange={handleStatusChange}
+            />
+          )}
+          
+          {loading && (
+            <div className="absolute inset-0 z-10 flex items-center justify-center bg-neutral-950/40 backdrop-blur-sm rounded-2xl">
+              <span className="font-mono-sm text-sm text-primary">Synchronizing...</span>
+            </div>
+          )}
+      </div>
+
+      {/* Drawer implementation for Adding/Editing */}
+      {editingApplication && (
+        <div className="fixed inset-0 z-[100] flex justify-end">
+           <div className="absolute inset-0 bg-black/70 backdrop-blur-md" onClick={() => setEditingApplication(null)}></div>
+           <aside className="relative z-50 flex flex-col p-8 h-full w-[500px] border-l border-white/10 bg-neutral-900/95 backdrop-blur-3xl shadow-[-20px_0_60px_rgba(0,0,0,0.8)] overflow-y-auto">
+              <ApplicationForm
+                initialValues={editingApplication._id ? editingApplication : null}
+                onSubmit={handleSaveApplication}
+                onCancel={() => setEditingApplication(null)}
+                saving={saving}
+              />
+           </aside>
+        </div>
+      )}
     </div>
   );
 };

@@ -1,38 +1,36 @@
 import { statusOptions } from "../utils/constants";
 
-const statusClassMap = {
-  Pending: "badge badge-pending",
-  Interviewed: "badge badge-interviewed",
-  Accepted: "badge badge-accepted",
-  Rejected: "badge badge-rejected",
-  Offer: "badge badge-offer"
+const statusConfig = {
+  Pending: { bg: "bg-amber-500/10", text: "text-amber-400", border: "border-amber-500/20" },
+  Interviewed: { bg: "bg-blue-500/10", text: "text-blue-400", border: "border-blue-500/20" },
+  Accepted: { bg: "bg-emerald-500/10", text: "text-emerald-400", border: "border-emerald-500/20" },
+  Rejected: { bg: "bg-rose-500/10", text: "text-rose-400", border: "border-rose-500/20" },
+  Offer: { bg: "bg-violet-500/10", text: "text-violet-400", border: "border-violet-500/20" }
 };
 
 const StatusBadge = ({ status, onChange }) => {
+  const config = statusConfig[status] || { bg: "bg-neutral-500/10", text: "text-neutral-400", border: "border-neutral-500/20" };
+  const baseClasses = `px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border ${config.bg} ${config.text} ${config.border} transition-all duration-300`;
+
   if (!onChange) {
-    return <span className={statusClassMap[status] || "badge"}>{status}</span>;
+    return <span className={baseClasses}>{status}</span>;
   }
 
   return (
-    <select 
-      className={statusClassMap[status] || "badge"}
-      value={status} 
-      onChange={(e) => onChange(e.target.value)}
-      style={{
-        border: 'none',
-        cursor: 'pointer',
-        fontWeight: 600,
-        appearance: 'none',
-        textAlign: 'center',
-        width: 'auto',
-        marginTop: 0,
-        padding: '0.35rem 1rem 0.35rem 0.75rem'
-      }}
-    >
-      {statusOptions.map(option => (
-        <option key={option} value={option}>{option}</option>
-      ))}
-    </select>
+    <div className="relative inline-block">
+      <select 
+        className={`${baseClasses} cursor-pointer appearance-none outline-none hover:brightness-110 pr-6`}
+        value={status} 
+        onChange={(e) => onChange(e.target.value)}
+      >
+        {statusOptions.map(option => (
+          <option key={option} value={option} className="bg-neutral-900 text-white font-sans">{option}</option>
+        ))}
+      </select>
+      <span className="material-symbols-outlined absolute right-1.5 top-1/2 -translate-y-1/2 pointer-events-none text-[12px] opacity-70">
+        expand_more
+      </span>
+    </div>
   );
 };
 
