@@ -15,7 +15,11 @@ const App = () => {
   const { isAuthenticated, loading } = useAuth();
 
   if (loading) {
-    return <div className="page-loader">Loading your workspace...</div>;
+    return (
+      <div className="min-h-screen bg-[#15121b] flex items-center justify-center">
+        <span className="text-[#cfbcff] text-xs uppercase tracking-[0.2em] animate-pulse font-mono">Loading workspace...</span>
+      </div>
+    );
   }
 
   return (

@@ -19,8 +19,11 @@ const asgardeoConfig = {
     signInRedirectURL: redirectUrl,
     signOutRedirectURL: redirectUrl,
     clientID: import.meta.env.VITE_ASGARDEO_CLIENT_ID || "your_client_id",
-    baseUrl: import.meta.env.VITE_ASGARDEO_BASE_URL || "https://api.asgardeo.io/t/your_tenant",
-    scope: [ "openid", "profile", "email" ]
+    baseUrl: "https://api.asgardeo.io/t/org900gq",
+    scope: [ "openid", "profile", "email" ],
+    endpoints: {
+        wellKnownEndpoint: "https://api.asgardeo.io/t/org900gq/oauth2/token/.well-known/openid-configuration"
+    }
 };
 
 ReactDOM.createRoot(document.getElementById("root")).render(
