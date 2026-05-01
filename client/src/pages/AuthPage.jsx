@@ -14,7 +14,8 @@ const AuthPage = () => {
     }
   }, [state?.isAuthenticated, navigate]);
 
-  const handleLogin = async () => {
+  const handleLogin = async (e) => {
+    if (e) e.preventDefault();
     setError("");
     setSubmitting(true);
     try {
@@ -29,91 +30,155 @@ const AuthPage = () => {
   if (state?.isLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
-        <span className="font-mono-sm text-primary animate-pulse uppercase tracking-[0.2em]">Synchronizing...</span>
+        <span className="font-mono-data text-primary-container animate-pulse uppercase tracking-[0.2em]">Synchronizing...</span>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-background text-on-background flex items-center justify-center p-6 relative overflow-hidden font-body-md">
-      {/* Background Decor */}
-      <div className="absolute top-0 left-0 w-full h-full pointer-events-none overflow-hidden">
-        <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-primary/20 blur-[120px] rounded-full"></div>
-        <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-secondary/20 blur-[120px] rounded-full"></div>
+    <div className="bg-background text-on-background min-h-screen flex flex-col md:flex-row antialiased">
+      {/* Left Conceptual Pane */}
+      <div className="hidden md:flex w-1/2 bg-surface-container-lowest flex-col relative overflow-hidden border-r border-outline-variant p-[64px]">
+        {/* Abstract Glows */}
+        <div className="absolute -top-[20%] -left-[10%] w-[600px] h-[600px] bg-primary-container rounded-full blur-[160px] opacity-10 pointer-events-none"></div>
+        <div className="absolute bottom-[10%] -right-[20%] w-[500px] h-[500px] bg-primary-container rounded-full blur-[140px] opacity-[0.08] pointer-events-none"></div>
+        
+        {/* Header */}
+        <div className="flex items-baseline gap-xs z-10">
+          <h1 className="font-h2 text-[32px] font-extrabold tracking-tight">stitch.</h1>
+          <span className="font-label-caps text-[12px] text-on-surface-variant uppercase tracking-widest ml-2">Smart Tracker</span>
+        </div>
+        
+        {/* Main Copy & Features */}
+        <div className="mt-auto mb-[48px] z-10 max-w-xl">
+          <h2 className="font-h1 text-[40px] mb-[32px] text-on-surface">
+            Track your career,<br/>land your <span className="text-primary-container">dream role.</span>
+          </h2>
+          <ul className="flex flex-col gap-[16px]">
+            <li className="flex items-center gap-[16px]">
+              <span className="material-symbols-outlined text-primary-container" style={{ fontVariationSettings: "'FILL' 1" }}>check_circle</span>
+              <span className="font-body-lg text-[18px] text-on-surface-variant">Real-time application pipeline</span>
+            </li>
+            <li className="flex items-center gap-[16px]">
+              <span className="material-symbols-outlined text-primary-container" style={{ fontVariationSettings: "'FILL' 1" }}>check_circle</span>
+              <span className="font-body-lg text-[18px] text-on-surface-variant">Secured by Asgardeo Identity</span>
+            </li>
+            <li className="flex items-center gap-[16px]">
+              <span className="material-symbols-outlined text-primary-container" style={{ fontVariationSettings: "'FILL' 1" }}>check_circle</span>
+              <span className="font-body-lg text-[18px] text-on-surface-variant">Smart analytics & insights</span>
+            </li>
+          </ul>
+        </div>
+        
+        {/* Footer Badge */}
+        <div className="mt-auto z-10">
+          <div className="inline-flex items-center gap-[8px] px-[16px] py-[8px] rounded-lg bg-surface-container/40 border border-outline-variant backdrop-blur-sm">
+            <span className="material-symbols-outlined text-secondary" style={{ fontVariationSettings: "'FILL' 1" }}>cloud_sync</span>
+            <span className="font-code-sm text-[12px] text-on-surface-variant">Deployed on WSO2 Choreo</span>
+          </div>
+        </div>
       </div>
-
-      <div className="max-w-5xl w-full grid grid-cols-1 lg:grid-cols-2 gap-12 items-center relative z-10">
-        <section className="space-y-6">
-          <span className="font-mono-sm text-primary uppercase tracking-[0.2em]">Enterprise Career Tracking</span>
-          <h1 className="text-5xl font-black tracking-tighter leading-none">
-            Scale your <br/>
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-violet-400 to-fuchsia-500">internship journey.</span>
-          </h1>
-          <p className="text-neutral-400 max-w-md leading-relaxed">
-            Manage interviews, reminders, and success analytics with the smart platform designed for modern career growth.
-          </p>
-          <div className="flex items-center gap-4 pt-4">
-            <div className="flex -space-x-3">
-              {[1,2,3].map(i => (
-                <div key={i} className="w-10 h-10 rounded-full border-2 border-background bg-surface-variant flex items-center justify-center">
-                  <span className="material-symbols-outlined text-[20px] text-neutral-600">person</span>
-                </div>
-              ))}
+      
+      {/* Right Authentication Pane */}
+      <div className="w-full md:w-1/2 flex flex-col relative bg-background">
+        {/* Mobile Header (Hidden on Desktop) */}
+        <div className="flex md:hidden items-center justify-center p-[32px] border-b border-outline-variant bg-surface-container-lowest">
+          <h1 className="font-h3 text-[24px] font-extrabold tracking-tight">stitch.</h1>
+        </div>
+        
+        <div className="flex-1 flex flex-col items-center justify-center p-[24px] sm:p-[48px] w-full max-w-lg mx-auto relative z-10">
+          {/* Auth Card */}
+          <div className="w-full bg-surface-container border border-outline-variant rounded-xl p-[32px] shadow-[0_8px_24px_rgba(0,0,0,0.4)]">
+            {/* Tab Switcher */}
+            <div className="flex border-b border-outline-variant mb-[32px]">
+              <button className="flex-1 pb-[8px] border-b-2 border-primary-container font-label-caps text-[12px] text-primary-container transition-colors uppercase">
+                Login
+              </button>
+              <button className="flex-1 pb-[8px] border-b-2 border-transparent font-label-caps text-[12px] text-on-surface-variant hover:text-on-surface transition-colors uppercase">
+                Register
+              </button>
             </div>
-            <span className="text-xs text-neutral-500 font-medium italic">Joined by 1,000+ students this semester</span>
-          </div>
-        </section>
-
-        <section className="glass-card p-10 rounded-[32px] shadow-2xl flex flex-col items-center text-center">
-          <div className="w-20 h-20 rounded-[24px] bg-gradient-to-tr from-primary to-secondary flex items-center justify-center mb-8 shadow-xl shadow-primary/20">
-            <span className="material-symbols-outlined text-white text-4xl">rocket_launch</span>
-          </div>
-
-          <h2 className="text-2xl font-bold mb-2">Welcome Back</h2>
-          <p className="text-neutral-500 text-sm mb-10 max-w-[280px]">
-            Securely sign in using Asgardeo Identity Cloud to access your personalized dashboard.
-          </p>
-
-          {error && (
-            <div className="w-full mb-6 p-4 bg-error/10 border border-error/20 rounded-xl text-error text-xs font-medium">
-              {error}
-            </div>
-          )}
-
-          <button
-            onClick={handleLogin}
-            disabled={submitting}
-            className="shimmer-btn relative overflow-hidden w-full py-5 bg-primary text-on-primary font-bold rounded-2xl shadow-xl shadow-violet-900/20 hover:brightness-110 active:scale-[0.98] transition-all flex items-center justify-center gap-3 group disabled:opacity-60"
-          >
-            {submitting ? (
-              <>
-                <span className="material-symbols-outlined animate-spin">autorenew</span>
-                Redirecting...
-              </>
-            ) : (
-              <>
-                <span className="material-symbols-outlined group-hover:translate-x-1 transition-transform">login</span>
-                Continue with Asgardeo
-              </>
+            
+            {/* Content */}
+            <h2 className="font-h2 text-[32px] mb-[24px] text-on-surface">Welcome back</h2>
+            
+            {error && (
+              <div className="w-full mb-6 p-4 bg-error/10 border border-error/20 rounded-xl text-error text-xs font-medium">
+                {error}
+              </div>
             )}
-          </button>
-
-          <div className="mt-8 flex items-center gap-2 text-xs text-neutral-500">
-            <span className="material-symbols-outlined text-[14px]">lock</span>
-            Enterprise SSO Protected
-          </div>
-
-          <div className="mt-auto pt-10 grid grid-cols-2 gap-4 w-full opacity-50">
-            <div className="flex flex-col gap-1 items-center">
-              <span className="text-[10px] font-bold uppercase tracking-widest">Powered By</span>
-              <span className="text-xs font-black tracking-tighter">WSO2 Asgardeo</span>
+            
+            <form className="flex flex-col gap-[24px]" onSubmit={handleLogin}>
+              {/* Email Input */}
+              <div className="relative">
+                <span className="material-symbols-outlined absolute left-[16px] top-1/2 -translate-y-1/2 text-on-surface-variant pointer-events-none">mail</span>
+                <input 
+                  className="w-full bg-surface-container-high border border-outline-variant rounded-lg py-[16px] pl-[48px] pr-[16px] font-body-md text-[16px] text-on-surface placeholder:text-on-surface-variant/50 focus:border-primary-container focus:ring-1 focus:ring-primary-container/20 transition-all outline-none" 
+                  placeholder="name@company.com" 
+                />
+              </div>
+              
+              {/* Password Input */}
+              <div className="relative">
+                <span className="material-symbols-outlined absolute left-[16px] top-1/2 -translate-y-1/2 text-on-surface-variant pointer-events-none">lock</span>
+                <input 
+                  className="w-full bg-surface-container-high border border-outline-variant rounded-lg py-[16px] pl-[48px] pr-[16px] font-body-md text-[16px] text-on-surface placeholder:text-on-surface-variant/50 focus:border-primary-container focus:ring-1 focus:ring-primary-container/20 transition-all outline-none" 
+                  placeholder="••••••••" 
+                  type="password" 
+                />
+              </div>
+              
+              {/* Actions Row */}
+              <div className="flex items-center justify-between">
+                <label className="flex items-center gap-[8px] cursor-pointer group">
+                  <div className="relative flex items-center justify-center w-4 h-4 rounded border border-outline-variant bg-surface-container-high group-hover:border-primary-container transition-colors">
+                    <input className="opacity-0 absolute inset-0 cursor-pointer" type="checkbox" />
+                  </div>
+                  <span className="font-code-sm text-[12px] text-on-surface-variant group-hover:text-on-surface transition-colors">Remember me</span>
+                </label>
+                <a href="#" className="font-code-sm text-[12px] text-primary-container hover:text-primary transition-colors">Forgot password?</a>
+              </div>
+              
+              {/* Submit Button */}
+              <button 
+                type="submit" 
+                disabled={submitting}
+                className="w-full bg-primary-container text-on-primary-container font-label-caps text-[12px] uppercase tracking-widest py-[16px] rounded-lg hover:-translate-y-[1px] hover:shadow-[0_4px_12px_rgba(255,115,0,0.2)] transition-all active:translate-y-0 disabled:opacity-50"
+              >
+                {submitting ? "Redirecting..." : "Sign in to Stitch"}
+              </button>
+            </form>
+            
+            {/* Divider */}
+            <div className="flex items-center gap-[16px] my-[32px] opacity-60">
+              <div className="flex-1 h-px bg-outline-variant"></div>
+              <span className="font-code-sm text-[12px] text-on-surface-variant uppercase">Or continue with</span>
+              <div className="flex-1 h-px bg-outline-variant"></div>
             </div>
-            <div className="flex flex-col gap-1 items-center">
-              <span className="text-[10px] font-bold uppercase tracking-widest">Cloud Platform</span>
-              <span className="text-xs font-black tracking-tighter">Choreo Runtime</span>
+            
+            {/* Social Auth */}
+            <div className="flex flex-col sm:flex-row gap-[16px]">
+              <button onClick={handleLogin} className="flex-1 flex items-center justify-center gap-[8px] bg-surface-container-high border border-outline-variant rounded-lg py-[8px] px-[16px] hover:bg-surface-bright hover:border-outline transition-all group disabled:opacity-50" disabled={submitting}>
+                <span className="font-code-sm text-[12px] text-on-surface group-hover:text-white transition-colors">Google</span>
+              </button>
+              <button onClick={handleLogin} className="flex-1 flex items-center justify-center gap-[8px] bg-surface-container-high border border-outline-variant rounded-lg py-[8px] px-[16px] hover:bg-surface-bright hover:border-outline transition-all group disabled:opacity-50" disabled={submitting}>
+                <span className="material-symbols-outlined text-secondary text-[18px]">security</span>
+                <span className="font-code-sm text-[12px] text-on-surface group-hover:text-white transition-colors">Asgardeo SSO</span>
+              </button>
             </div>
           </div>
-        </section>
+        </div>
+        
+        {/* Global Footer */}
+        <div className="mt-auto flex justify-center py-[24px] border-t border-outline-variant/30 bg-background/80 backdrop-blur-md">
+          <div className="flex items-center gap-[16px] font-mono-data text-[13px] text-on-surface-variant/70">
+            <a href="#" className="hover:text-primary-container transition-colors">Privacy</a>
+            <span>·</span>
+            <a href="#" className="hover:text-primary-container transition-colors">Terms</a>
+            <span>·</span>
+            <span>© 2025 Stitch</span>
+          </div>
+        </div>
       </div>
     </div>
   );

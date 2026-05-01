@@ -10,14 +10,17 @@ import ProfilePage from "./pages/ProfilePage";
 import ReviewQueuePage from "./pages/ReviewQueuePage";
 import SessionManager from "./components/SessionManager";
 import RateLimitBanner from "./components/RateLimitBanner";
+import ApplicationsPage from "./pages/ApplicationsPage";
+import InterviewsPage from "./pages/InterviewsPage";
+import AnalyticsPage from "./pages/AnalyticsPage";
 
 const App = () => {
   const { isAuthenticated, loading } = useAuth();
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#15121b] flex items-center justify-center">
-        <span className="text-[#cfbcff] text-xs uppercase tracking-[0.2em] animate-pulse font-mono">Loading workspace...</span>
+      <div className="min-h-screen bg-[#0A0A0A] flex items-center justify-center">
+        <span className="text-primary-container text-xs uppercase tracking-[0.2em] animate-pulse font-mono-data">Loading workspace...</span>
       </div>
     );
   }
@@ -38,6 +41,9 @@ const App = () => {
           }
         >
           <Route index element={<DashboardPage />} />
+          <Route path="applications" element={<ApplicationsPage />} />
+          <Route path="interviews" element={<InterviewsPage />} />
+          <Route path="analytics" element={<AnalyticsPage />} />
           <Route path="profile" element={<ProfilePage />} />
           <Route
             path="admin"
