@@ -28,13 +28,7 @@ See [`ballerina-digest/`](./ballerina-digest/) — a standalone Ballerina Swan L
 - Exposes `GET /health` for Choreo liveness probes
 - Exposes `POST /triggerDigest` for manual testing
 
-## WSO2 Contribution Points
-- **PR #11147** — Documentation fix in wso2/docs-apim
-- **Blog post** — WSO2 API Manager guide (link)
-- **Blog post** — WSO2 platform overview (link)
-- **Stack Overflow** — WSO2 APIM security headers answer (link)
 
----
 
 
 ## Engineering Highlights
