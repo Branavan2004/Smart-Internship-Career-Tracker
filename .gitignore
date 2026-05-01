@@ -9,3 +9,8 @@ server/uploads/*
 # Ballerina — real credentials (never commit)
 ballerina-digest/Config.toml
 analytics-service/Config.toml
+
+# Python Virtual Environments
+venv/
+.venv/
+__pycache__/
