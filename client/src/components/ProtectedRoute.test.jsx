@@ -1,3 +1,16 @@
+import { vi } from "vitest";
+vi.mock("@asgardeo/auth-react", () => ({
+  AuthProvider: ({ children }) => children,
+  useAuthContext: () => ({
+    state: { isAuthenticated: false, isLoading: false },
+    signIn: vi.fn(),
+    signOut: vi.fn(),
+    getBasicUserInfo: vi.fn().mockResolvedValue({}),
+    getDecodedIDToken: vi.fn().mockResolvedValue({}),
+    on: vi.fn()
+  })
+}));
+
 import { render, screen } from "@testing-library/react";
 import { MemoryRouter, Routes, Route } from "react-router-dom";
 import ProtectedRoute from "./ProtectedRoute";

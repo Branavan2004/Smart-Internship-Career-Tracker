@@ -1,3 +1,20 @@
+import { vi } from "vitest";
+vi.mock("@asgardeo/auth-react", () => ({
+  AuthProvider: ({ children }) => children,
+  useAuthContext: () => ({
+    state: { isAuthenticated: false, isLoading: false },
+    signIn: vi.fn(),
+    signOut: vi.fn(),
+    getBasicUserInfo: vi.fn().mockResolvedValue({}),
+    getDecodedIDToken: vi.fn().mockResolvedValue({}),
+    on: vi.fn()
+  })
+}));
+
+vi.mock("../hooks/useApiStatus", () => ({
+  useApiStatus: () => ({ isOnline: true })
+}));
+
 import { render, screen } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import AppShell from "./AppShell";
