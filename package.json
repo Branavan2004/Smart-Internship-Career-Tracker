@@ -3,9 +3,22 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
+    "dev": "npm run dev:gateway",
+    "dev:gateway": "npm run dev --prefix gateway-service",
+    "dev:auth": "npm run dev --prefix auth-service",
+    "dev:application": "npm run dev --prefix application-service",
+    "dev:notification": "npm run dev --prefix notification-service",
+    "dev:analytics": "npm run dev --prefix analytics-service",
     "dev:client": "npm run dev --prefix client",
     "dev:server": "npm run dev --prefix server",
     "build:client": "npm run build --prefix client",
-    "start:server": "npm run start --prefix server"
+    "start:gateway": "npm run start --prefix gateway-service",
+    "start:auth": "npm run start --prefix auth-service",
+    "start:application": "npm run start --prefix application-service",
+    "start:notification": "npm run start --prefix notification-service",
+    "start:analytics": "npm run start --prefix analytics-service",
+    "start:server": "npm run start --prefix server",
+    "test:auth": "npm run test --prefix auth-service",
+    "test:application": "npm run test --prefix application-service"
   }
 }

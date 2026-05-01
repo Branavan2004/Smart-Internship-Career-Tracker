@@ -1,6 +1,7 @@
 import Application from "../models/Application.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { eventBus } from "../events/EventBus.js";
+import axios from "axios";
 
 const normalizeDate = (value) => {
   if (!value) {
@@ -115,6 +116,23 @@ export const updateApplication = asyncHandler(async (req, res) => {
       previousStatus: application.status,
       newStatus: req.body.status,
     });
+
+    // ------------------------------------------------------------------------
+    // WEBHOOK: Trigger Ballerina Interview Workflow Microservice
+    // We use a fire-and-forget pattern here. If the Ballerina service is down,
+    // we log a warning but DO NOT fail the request. The user's application 
+    // status was successfully saved to MongoDB, which is the core requirement.
+    // ------------------------------------------------------------------------
+    if (req.body.status.toLowerCase() === "interviewed") {
+      axios.post("http://localhost:9091/api/interview-trigger", {
+        applicantEmail: req.user.email,
+        companyName: application.companyName,
+        role: application.role,
+        interviewDate: application.interviewDate || null
+      }).catch(err => {
+        console.warn("⚠️ Webhook to Ballerina interview service failed:", err.message);
+      });
+    }
   }
 
   res.json({

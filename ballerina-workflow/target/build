@@ -1,0 +1,55 @@
+{
+  "last_build_time": 1777635130215,
+  "last_update_time": 1777635130215,
+  "last_bal_toml_update_time": 1777634933026,
+  "distribution_version": "2201.13.3",
+  "last_modified_time": {
+    "interview_workflow": 1777635116742
+  },
+  "last_build_options": {
+    "compilationOptions": {
+      "observabilityIncluded": true,
+      "dumpBir": false,
+      "cloud": "",
+      "dumpGraph": false,
+      "dumpRawGraphs": false
+    }
+  },
+  "src_meta_info": [
+    {
+      "file": "/Users/branavan/Smart-Internship-Career-Tracker-main/ballerina-workflow/main.bal",
+      "hash": "4371860d9a8ef4e6e797541f6e5d09f8cba0c49ae70cc1b8d302a3d0e8f48c42",
+      "size": 6548,
+      "lastModifiedTime": 1777635116742
+    },
+    {
+      "file": "/Users/branavan/Smart-Internship-Career-Tracker-main/ballerina-workflow/Ballerina.toml",
+      "hash": "70191534a231a5d390e73087511d68fe2da2a2e38ab5db1e2674eac9bf46e08b",
+      "size": 146,
+      "lastModifiedTime": 1777634933026
+    }
+  ],
+  "target_exec_meta_info": {
+    "file": "/Users/branavan/Smart-Internship-Career-Tracker-main/ballerina-workflow/target/backup/bin/interview_workflow.jar",
+    "hash": "efae1672a5fa9900632f00495c55da2294533d8f9f68cd5a18d446728db292ec",
+    "size": 48625929,
+    "lastModifiedTime": 1777635131392
+  },
+  "settings_meta_info": {
+    "file": "/Users/branavan/.ballerina/Settings.toml",
+    "hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "size": 0,
+    "lastModifiedTime": 1777630454182
+  },
+  "ballerina_toml_meta_info": {
+    "file": "/Users/branavan/Smart-Internship-Career-Tracker-main/ballerina-workflow/Ballerina.toml",
+    "hash": "70191534a231a5d390e73087511d68fe2da2a2e38ab5db1e2674eac9bf46e08b",
+    "size": 146,
+    "lastModifiedTime": 1777634933026
+  },
+  "imports": [
+    "ballerina/http",
+    "ballerina/email",
+    "ballerina/log"
+  ]
+}

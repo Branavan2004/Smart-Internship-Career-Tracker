@@ -25,26 +25,15 @@ export const AuthProvider = ({ children }) => {
     }
 
     try {
-      // Step 1: Get the Asgardeo access token and user info
-      const asgardeoToken = await getAccessToken();
-      const userInfo = await getBasicUserInfo();
-
-      if (asgardeoToken && userInfo) {
-        // Step 2: Exchange it for a backend JWT that our middleware can verify
-        const exchangeResponse = await apiClient.post("/auth/asgardeo-exchange", {
-          asgardeoToken,
-          userInfo
-        });
-
-        const backendToken = exchangeResponse.data.accessToken || exchangeResponse.data.token;
-        if (backendToken) {
-          // Step 3: Store the backend JWT so the API interceptor picks it up
-          localStorage.setItem("careerTrackerToken", backendToken);
-          setUser(exchangeResponse.data.user);
-        }
+      const accessToken = await getAccessToken();
+      if (accessToken) {
+        localStorage.setItem("careerTrackerToken", accessToken);
       }
+
+      const response = await apiClient.get("/auth/me");
+      setUser(response.data.user);
     } catch (_error) {
-      console.error("Token exchange failed:", _error?.response?.data || _error.message);
+      console.error("Failed to load user:", _error?.response?.data || _error.message);
     } finally {
       setLoading(false);
     }

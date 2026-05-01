@@ -42,6 +42,6 @@ router.use(verifyJWT, authorizeRoles("student"));
  *               $ref: '#/components/schemas/ErrorResponse'
  */
 router.route("/").get(getApplications).post(createApplication);
-router.route("/:id").put(updateApplication).delete(deleteApplication);
+router.route("/:id").put(updateApplication).patch(updateApplication).delete(deleteApplication);
 
 export default router;

@@ -1,0 +1,5 @@
+smtpHost = "smtp.gmail.com"
+smtpPort = 587
+smtpUsername = "your-email@gmail.com"
+smtpPassword = "your-app-password"
+senderName = "Smart Internship Tracker"

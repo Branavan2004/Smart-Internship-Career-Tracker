@@ -1,0 +1,57 @@
+{
+  "last_build_time": 1777631221126,
+  "last_update_time": 1777631221126,
+  "last_bal_toml_update_time": 1777630722781,
+  "distribution_version": "2201.13.3",
+  "last_modified_time": {
+    "weekly_digest": 1777631199507
+  },
+  "last_build_options": {
+    "compilationOptions": {
+      "observabilityIncluded": true,
+      "dumpBir": false,
+      "cloud": "",
+      "dumpGraph": false,
+      "dumpRawGraphs": false
+    }
+  },
+  "src_meta_info": [
+    {
+      "file": "/Users/branavan/Smart-Internship-Career-Tracker-main/ballerina-digest/main.bal",
+      "hash": "2b0ad3be67652d71e0d682b3c5821acda5051d0d89c3d37b94da1651e02a45b2",
+      "size": 21261,
+      "lastModifiedTime": 1777631199507
+    },
+    {
+      "file": "/Users/branavan/Smart-Internship-Career-Tracker-main/ballerina-digest/Ballerina.toml",
+      "hash": "44cc6ae1ec1304ab90395fe31c1464e28c3813f2744a5102b24c692763726bca",
+      "size": 1460,
+      "lastModifiedTime": 1777630722781
+    }
+  ],
+  "target_exec_meta_info": {
+    "file": "/Users/branavan/Smart-Internship-Career-Tracker-main/ballerina-digest/target/backup/bin/weekly_digest.jar",
+    "hash": "15fa239b19a1505e719d5488d3314b62fdba7dc1fddfadecc8041acb306e7b24",
+    "size": 48645893,
+    "lastModifiedTime": 1777631223305
+  },
+  "settings_meta_info": {
+    "file": "/Users/branavan/.ballerina/Settings.toml",
+    "hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "size": 0,
+    "lastModifiedTime": 1777630454182
+  },
+  "ballerina_toml_meta_info": {
+    "file": "/Users/branavan/Smart-Internship-Career-Tracker-main/ballerina-digest/Ballerina.toml",
+    "hash": "44cc6ae1ec1304ab90395fe31c1464e28c3813f2744a5102b24c692763726bca",
+    "size": 1460,
+    "lastModifiedTime": 1777630722781
+  },
+  "imports": [
+    "ballerina/email",
+    "ballerina/http",
+    "ballerina/log",
+    "ballerina/task",
+    "ballerina/time"
+  ]
+}

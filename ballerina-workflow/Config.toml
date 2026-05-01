@@ -1,0 +1,5 @@
+smtpHost = "sandbox.smtp.mailtrap.io"
+smtpPort = 587
+smtpUsername = "d2e29f64b0706c"
+smtpPassword = "16d76fc85420ce"
+senderName = "Smart Internship Tracker"

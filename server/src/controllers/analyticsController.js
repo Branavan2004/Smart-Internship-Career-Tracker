@@ -1,6 +1,15 @@
 import Application from "../models/Application.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 
+// Map DB title-case status values to our counter keys
+const STATUS_KEY_MAP = {
+  pending: "pending",
+  interviewed: "interviewed",
+  accepted: "accepted",
+  rejected: "rejected",
+  offer: "offer"
+};
+
 export const getAnalytics = asyncHandler(async (req, res) => {
   const applications = await Application.find({ user: req.user._id });
   const totals = {
@@ -17,9 +26,10 @@ export const getAnalytics = asyncHandler(async (req, res) => {
   const rejectionReasons = {};
 
   applications.forEach((application) => {
-    const normalizedStatus = application.status.toLowerCase();
-    if (totals[normalizedStatus] !== undefined) {
-      totals[normalizedStatus] += 1;
+    // Bug #13: Use explicit map so we are never dependent on DB casing
+    const statusKey = STATUS_KEY_MAP[application.status?.toLowerCase()];
+    if (statusKey !== undefined) {
+      totals[statusKey] += 1;
     }
 
     roleBreakdown[application.roleType] = (roleBreakdown[application.roleType] || 0) + 1;
@@ -34,7 +44,9 @@ export const getAnalytics = asyncHandler(async (req, res) => {
     }
   });
 
-  const successRate = totals.total ? Number((((totals.accepted + totals.offer) / totals.total) * 100).toFixed(1)) : 0;
+  const successRate = totals.total
+    ? Number((((totals.accepted + totals.offer) / totals.total) * 100).toFixed(1))
+    : 0;
 
   res.json({
     stats: {
