@@ -1,10 +1,18 @@
 import { NavLink, Outlet } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
 import { useApiStatus } from "../hooks/useApiStatus";
+import { useAsgardeoGroups } from "../hooks/useAsgardeoGroups";
 
 const AppShell = () => {
   const { user, logout } = useAuth();
   const { throttlingData } = useApiStatus();
+  const { role: asgardeoRole, isAdmin, isReviewer, loading: groupsLoading } = useAsgardeoGroups();
+
+  const getRoleBadgeColor = () => {
+    if (isAdmin) return "#ef4444"; // red
+    if (isReviewer) return "#3b82f6"; // blue
+    return "#10b981"; // green
+  };
 
   return (
     <div className="app-shell">
@@ -22,15 +30,33 @@ const AppShell = () => {
             Dashboard
           </NavLink>
           <NavLink to="/profile">Profile</NavLink>
-          {user?.role === "admin" ? <NavLink to="/admin">Admin</NavLink> : null}
-          {user?.role === "reviewer" ? <NavLink to="/review">Reviewer</NavLink> : null}
+          {isAdmin ? <NavLink to="/admin">Admin</NavLink> : null}
+          {isReviewer ? <NavLink to="/review">Reviewer</NavLink> : null}
         </nav>
 
         <div className="sidebar-footer">
           <p>Signed in as</p>
           <strong>{user?.name}</strong>
           <span>{user?.email}</span>
-          <span>Role: {user?.role || "student"}</span>
+          <div style={{ marginTop: "12px", marginBottom: "12px" }}>
+            {groupsLoading ? (
+              <span style={{ fontSize: "12px", opacity: 0.7 }}>Loading permissions...</span>
+            ) : (
+              <span 
+                style={{
+                  backgroundColor: getRoleBadgeColor(),
+                  color: "white",
+                  padding: "4px 8px",
+                  borderRadius: "12px",
+                  fontSize: "12px",
+                  fontWeight: "bold",
+                  textTransform: "uppercase"
+                }}
+              >
+                {asgardeoRole}
+              </span>
+            )}
+          </div>
           <button type="button" className="ghost-button" onClick={logout}>
             Log out
           </button>

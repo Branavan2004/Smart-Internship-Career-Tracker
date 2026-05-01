@@ -33,6 +33,10 @@ const userSchema = new mongoose.Schema(
       default: "student",
       required: true
     },
+    groups: {
+      type: [String],
+      default: []
+    },
     // Multi-tenancy — logical tenant isolation
     tenantId: {
       type: String,

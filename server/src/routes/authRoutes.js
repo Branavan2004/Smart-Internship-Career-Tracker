@@ -8,7 +8,8 @@ import {
   loginUser,
   logoutUser,
   refreshAccessToken,
-  registerUser
+  registerUser,
+  getMyGroups
 } from "../controllers/authController.js";
 import { protect } from "../middleware/authMiddleware.js";
 import { isGoogleOAuthConfigured } from "../config/passport.js";
@@ -248,5 +249,35 @@ router.get("/asgardeo/failure", (_req, res) => {
  *               $ref: '#/components/schemas/ErrorResponse'
  */
 router.get("/me", protect, getCurrentUser);
+
+/**
+ * @openapi
+ * /api/auth/my-groups:
+ *   get:
+ *     summary: Get the current user's role and Asgardeo groups.
+ *     tags:
+ *       - Authentication
+ *     security:
+ *       - BearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Current user groups and role.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 role:
+ *                   type: string
+ *                 groups:
+ *                   type: array
+ *                   items:
+ *                     type: string
+ *                 source:
+ *                   type: string
+ *       401:
+ *         description: Missing or invalid access token.
+ */
+router.get("/my-groups", protect, getMyGroups);
 
 export default router;

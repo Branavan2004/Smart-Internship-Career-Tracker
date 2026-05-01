@@ -48,9 +48,9 @@ export const setupAsgardeoStrategy = async (passport) => {
             }
 
             let role = "student";
-            if (groups.includes("admin")) {
+            if (groups.includes("admin") || groups.includes("Admin")) {
               role = "admin";
-            } else if (groups.includes("reviewer")) {
+            } else if (groups.includes("reviewer") || groups.includes("Reviewer")) {
               role = "reviewer";
             }
 
@@ -63,11 +63,15 @@ export const setupAsgardeoStrategy = async (passport) => {
                 name: displayName,
                 email,
                 asgardeoId: sub,
-                role
+                role,
+                groups
               });
             } else {
               user.asgardeoId = user.asgardeoId || sub;
               user.name = user.name || displayName;
+              // Ensure role and groups are updated on every login
+              user.role = role;
+              user.groups = groups;
               await user.save();
             }
 

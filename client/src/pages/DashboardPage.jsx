@@ -21,9 +21,13 @@ import { emptyApplication, roleTypeOptions, statusOptions } from "../utils/const
 import { useToast } from "../context/ToastContext";
 import { recalculateAnalytics } from "../utils/analyticsHelper";
 
+import GroupBasedView from "../components/GroupBasedView";
+import AdminDashboardPage from "./AdminDashboardPage";
+import ReviewQueuePage from "./ReviewQueuePage";
+
 const chartColors = ["#ff7a59", "#ffb347", "#5ec4ff", "#24b47e", "#f15bb5", "#6a4c93"];
 
-const DashboardPage = () => {
+const StudentDashboard = () => {
   const [applications, setApplications] = useState([]);
   const [analytics, setAnalytics] = useState({
     stats: {
@@ -429,6 +433,16 @@ const DashboardPage = () => {
         ) : null}
       </div>
     </div>
+  );
+};
+
+const DashboardPage = () => {
+  return (
+    <GroupBasedView
+      adminView={<AdminDashboardPage />}
+      reviewerView={<ReviewQueuePage />}
+      studentView={<StudentDashboard />}
+    />
   );
 };
 

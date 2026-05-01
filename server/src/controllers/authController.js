@@ -81,6 +81,20 @@ export const getCurrentUser = asyncHandler(async (req, res) => {
   res.json({ user: sanitizeUser(req.user) });
 });
 
+export const getMyGroups = asyncHandler(async (req, res) => {
+  if (!req.user) {
+    const error = new Error("Not authorized.");
+    error.statusCode = 401;
+    throw error;
+  }
+
+  res.json({
+    role: req.user.role,
+    groups: req.user.groups || [],
+    source: req.user.asgardeoId ? "asgardeo" : "local"
+  });
+});
+
 export const handleGoogleAuthSuccess = asyncHandler(async (req, res) => {
   const { accessToken, refreshToken } = await issueAuthTokens(req.user);
   setRefreshTokenCookie(res, refreshToken);
@@ -110,6 +124,15 @@ export const exchangeAsgardeoToken = asyncHandler(async (req, res) => {
     throw error;
   }
 
+  const groups = userInfo.groups || [];
+  let role = "student";
+  
+  if (groups.includes("admin") || groups.includes("Admin")) {
+    role = "admin";
+  } else if (groups.includes("reviewer") || groups.includes("Reviewer")) {
+    role = "reviewer";
+  }
+
   // Find existing user or create a new one (auto-provision on first SSO login)
   let user = await User.findOne({ email: userInfo.email });
 
@@ -117,9 +140,16 @@ export const exchangeAsgardeoToken = asyncHandler(async (req, res) => {
     user = await User.create({
       name: userInfo.name || userInfo.given_name || userInfo.email.split("@")[0],
       email: userInfo.email,
-      role: "student",
+      role,
+      groups,
       asgardeoId: userInfo.sub,
     });
+  } else {
+    // Update role and groups if the user already exists
+    user.role = role;
+    user.groups = groups;
+    user.asgardeoId = user.asgardeoId || userInfo.sub;
+    await user.save();
   }
 
   await sendAuthResponse(res, user);

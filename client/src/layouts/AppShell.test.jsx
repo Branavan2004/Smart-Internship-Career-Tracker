@@ -15,6 +15,9 @@ vi.mock("../hooks/useApiStatus", () => ({
   useApiStatus: () => ({ isOnline: true })
 }));
 
+import * as asgardeoHook from "../hooks/useAsgardeoGroups";
+vi.mock("../hooks/useAsgardeoGroups");
+
 import { render, screen } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import AppShell from "./AppShell";
@@ -40,6 +43,9 @@ const renderShell = (role) =>
 
 describe("AppShell RBAC navigation", () => {
   it("hides admin and reviewer menu items for students", () => {
+    asgardeoHook.useAsgardeoGroups.mockReturnValue({
+      role: "student", isAdmin: false, isReviewer: false, isStudent: true, loading: false
+    });
     renderShell("student");
 
     expect(screen.queryByText("Admin")).not.toBeInTheDocument();
@@ -47,12 +53,18 @@ describe("AppShell RBAC navigation", () => {
   });
 
   it("shows the admin menu item for admins", () => {
+    asgardeoHook.useAsgardeoGroups.mockReturnValue({
+      role: "admin", isAdmin: true, isReviewer: false, isStudent: false, loading: false
+    });
     renderShell("admin");
 
     expect(screen.getByText("Admin")).toBeInTheDocument();
   });
 
   it("shows the reviewer menu item for reviewers", () => {
+    asgardeoHook.useAsgardeoGroups.mockReturnValue({
+      role: "reviewer", isAdmin: false, isReviewer: true, isStudent: false, loading: false
+    });
     renderShell("reviewer");
 
     expect(screen.getByText("Reviewer")).toBeInTheDocument();

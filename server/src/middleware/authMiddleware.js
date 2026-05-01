@@ -8,6 +8,12 @@ import { verifyAccessToken } from "../utils/tokenService.js";
 // Fallback to "org900gq" which was found in your client/.env
 const ASGARDEO_ORG = process.env.ASGARDEO_ORG_NAME || "org900gq"; 
 
+console.log("=== ASGARDEO INIT ===");
+console.log("process.env.ASGARDEO_ORG_NAME loaded as:", process.env.ASGARDEO_ORG_NAME);
+console.log("Actual ASGARDEO_ORG being used:", ASGARDEO_ORG);
+console.log("JWKS URI:", `https://api.asgardeo.io/t/${ASGARDEO_ORG}/oauth2/jwks`);
+console.log("=====================");
+
 const asgardeoJwksClient = jwksClient({
   jwksUri: `https://api.asgardeo.io/t/${ASGARDEO_ORG}/oauth2/jwks`,
   cache: true,
@@ -37,15 +43,27 @@ async function verifyAsgardeoToken(token) {
 
 async function findOrCreateAsgardeoUser(decoded) {
   const sub = decoded.sub;
-
   let user = await User.findOne({ asgardeoId: sub });
-  if (user) return user;
 
-  // Asgardeo Access tokens often don't contain email, so we create a placeholder if missing
   const email = decoded.email ?? `${sub}@asgardeo.local`;
   const name  = decoded.name  ?? decoded.username ?? "Smart Intern User";
+  const groups = decoded.groups || [];
 
-  return User.create({ name, email, asgardeoId: sub, role: "student" });
+  let role = "student";
+  if (groups.includes("admin") || groups.includes("Admin")) {
+    role = "admin";
+  } else if (groups.includes("reviewer") || groups.includes("Reviewer")) {
+    role = "reviewer";
+  }
+
+  if (user) {
+    user.role = role;
+    user.groups = groups;
+    await user.save();
+    return user;
+  }
+
+  return User.create({ name, email, asgardeoId: sub, role, groups });
 }
 
 // ── Main middleware ───────────────────────────────────────────────────────────
@@ -108,6 +126,26 @@ export const authorizeRoles = (...allowedRoles) => (req, _res, next) => {
     const error = new Error("Forbidden. You do not have permission to access this resource.");
     error.statusCode = 403;
     logUnauthorizedAttempt(req, error.statusCode, error.message);
+    return next(error);
+  }
+
+  next();
+};
+
+export const requireAsgardeoGroup = (groupName) => (req, res, next) => {
+  if (!req.user) {
+    const error = new Error("Not authorized. User context is missing.");
+    error.statusCode = 401;
+    return next(error);
+  }
+
+  // The role maps directly to the Asgardeo group for admin/reviewer logic,
+  // or we can check req.user.groups directly if they logged in via Asgardeo
+  const mappedRole = groupName.toLowerCase();
+  
+  if (req.user.role !== mappedRole && !req.user.groups.includes(groupName)) {
+    const error = new Error(`Forbidden. Requires Asgardeo group: ${groupName}`);
+    error.statusCode = 403;
     return next(error);
   }
 
