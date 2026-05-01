@@ -14,3 +14,7 @@ analytics-service/Config.toml
 venv/
 .venv/
 __pycache__/
+
+# Unrelated Coursework
+research/
+BinarySearchTree.java
