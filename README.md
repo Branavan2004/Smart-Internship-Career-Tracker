@@ -46,10 +46,10 @@ Two Ballerina services run alongside the Node.js backend:
 - Choreo-native observability (`observabilityIncluded = true`)
 
 **`ballerina-digest`** — Scheduled email integration service:
-- Cron-scheduled job (every Monday 08:00 AM) via `ballerina/task`
+- Interval-scheduled job (every 7 days starting next Monday 08:00 AM) via `ballerina/task`
 - HTTP client call to the Node.js analytics endpoint
 - SMTP email delivery via `ballerina/email` (no npm dependencies)
-- Manual trigger endpoint (`POST /trigger-digest`) for testing
+- Manual trigger endpoint (`POST /triggerDigest`) for testing
 - Graceful degradation — skips the week if backend is unreachable
 
 ---
@@ -62,7 +62,7 @@ Two Ballerina services run alongside the Node.js backend:
 | API Gateway | WSO2 API Manager (throttling, monetisation, OpenAPI) |
 | Deployment | **WSO2 Choreo** (Cloud deployment on Azure, Auto-builds) |
 | Analytics Service | **Ballerina** 2201.8 (`analytics-service`) |
-| Digest Scheduler | **Ballerina** 2201.8 (`ballerina-digest`) |
+| Digest Scheduler | **Ballerina** 2201.13.3 (`ballerina-digest`) |
 | Backend | Node.js / Express (monolith + microservice stubs) |
 | Frontend | React 18 + Vite (role-based dashboards, Kanban, Recharts) |
 | Database | MongoDB Atlas |
