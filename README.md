@@ -1,6 +1,6 @@
-# Smart Internship & Career Ecosystem
+# Smart Internship & Career Tracker
 
-A **production-grade, multi-tenant SaaS platform** for internship and career tracking, built on the full WSO2 technology stack. Demonstrates enterprise engineering patterns including event-driven architecture, API monetisation, multi-tenancy, real-time observability, and **federated identity with Asgardeo**.
+> A production full-stack internship management platform built on the **WSO2 enterprise stack**.
 
 🚀 **Live Deployment:** [Smart Internship Tracker on WSO2 Choreo](https://33cc0d8e-a16a-40d7-a552-06910eed4a61.e1-us-east-azure.choreoapps.dev/)
 
@@ -10,6 +10,32 @@ A **production-grade, multi-tenant SaaS platform** for internship and career tra
 [![Ballerina](https://img.shields.io/badge/service-Ballerina%202201.8-blueviolet)](./analytics-service/analytics_service.bal)
 
 ---
+
+## WSO2 Integration
+
+| WSO2 Product | How it's used |
+|---|---|
+| **Asgardeo** | OIDC-based identity management with silent token refresh, 2-minute expiry warnings, and secure lock-out screens |
+| **API Manager** | Full API governance with OpenAPI 3.0 specs, role-based throttling tiers, and smart 429 error handling with exponential backoff |
+| **Choreo** | Cloud-native deployment with Docker containerisation and automated GitHub Actions CI/CD |
+| **Ballerina** | Weekly digest microservice (`ballerina-digest/`) — scheduled email reports using Ballerina's built-in task, HTTP, and email stdlib |
+
+## Ballerina Microservice
+See [`ballerina-digest/`](./ballerina-digest/) — a standalone Ballerina Swan Lake service that:
+- Polls the Node.js analytics endpoint every Monday at 08:00
+- Formats application stats into a plain-text email digest
+- Sends via Gmail SMTP using Ballerina's built-in email client
+- Exposes `GET /health` for Choreo liveness probes
+- Exposes `POST /triggerDigest` for manual testing
+
+## WSO2 Contribution Points
+- **PR #11147** — Documentation fix in wso2/docs-apim
+- **Blog post** — WSO2 API Manager guide (link)
+- **Blog post** — WSO2 platform overview (link)
+- **Stack Overflow** — WSO2 APIM security headers answer (link)
+
+---
+
 
 ## Engineering Highlights
 
