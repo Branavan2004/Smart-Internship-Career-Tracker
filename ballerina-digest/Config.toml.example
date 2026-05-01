@@ -1,0 +1,35 @@
+# Config.toml.example
+#
+# Copy this file to Config.toml and fill in your real values before running.
+# Config.toml is listed in .gitignore — NEVER commit real credentials.
+#
+# How Ballerina reads this file:
+#   - Local development: 'bal run' reads Config.toml automatically
+#   - WSO2 Choreo:       Inject as environment variables via Choreo Secrets
+#     The env var mapping is: BAL_CONFIG_VAR_<UPPERCASE_VARIABLE_NAME>
+#     e.g. backendUrl → BAL_CONFIG_VAR_BACKENDURL
+#
+# Reference: https://ballerina.io/learn/configure-ballerina-programs/
+
+# ── Node.js Backend ────────────────────────────────────────────────────────
+# URL of your Node.js backend's analytics endpoint.
+# Local:  http://localhost:5001/api/analytics
+# Choreo: Use the internal service URL assigned by Choreo (project-scoped DNS)
+backendUrl = "http://localhost:5001/api/analytics"
+
+# ── SMTP Configuration (Gmail) ─────────────────────────────────────────────
+# Use a Gmail App Password, NOT your main Gmail password.
+# Generate one at: Google Account → Security → 2-Step Verification → App Passwords
+smtpHost     = "smtp.gmail.com"
+smtpPort     = 587
+smtpUsername = "your-sender-email@gmail.com"
+smtpPassword = "xxxx xxxx xxxx xxxx"   # 16-char App Password (spaces allowed)
+
+# ── Recipient ──────────────────────────────────────────────────────────────
+# Who receives the weekly digest email.
+# For testing: use your own email address here.
+recipientEmail = "recipient@example.com"
+
+# ── Display Name ───────────────────────────────────────────────────────────
+# Appears as the "From" display name in the email client.
+senderName = "Smart Internship Tracker"

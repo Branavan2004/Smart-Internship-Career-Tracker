@@ -1,0 +1,28 @@
+# Ballerina.toml — Package descriptor for the Weekly Digest microservice.
+#
+# This file tells the Ballerina toolchain (and WSO2 Choreo) everything it needs
+# to know about the package: who owns it, its name, version, and which Swan Lake
+# distribution it targets.
+#
+# Choreo reads this file to auto-detect the component type (Ballerina service)
+# and build it without a Dockerfile.
+
+[package]
+org          = "smart_internship"   # Must match your Ballerina Central organisation
+name         = "weekly_digest"      # Package identifier — used in import paths
+version      = "1.0.0"
+distribution = "2201.13.3"         # Swan Lake 2201.13.3 — matches installed version
+
+[build-options]
+# Choreo's built-in Prometheus/Jaeger instrumentation. Adds /metrics and trace
+# headers without any code changes.
+observabilityIncluded = true
+
+# ── Note on dependencies ───────────────────────────────────────────────────
+# ballerina/email, ballerina/http, ballerina/task, ballerina/log, ballerina/time
+# are all part of the Swan Lake STANDARD LIBRARY — they ship with the Ballerina
+# distribution and must NOT be listed here.
+#
+# Only list third-party Ballerina Central packages here (ballerinax/* connectors,
+# community modules, etc.).  Adding a stdlib module to [dependencies] causes the
+# "invalid token '/email'" compile error seen in Swan Lake 2201.13.x.

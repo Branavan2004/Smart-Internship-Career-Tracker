@@ -36,12 +36,21 @@ Three tiers — **Free** (100 writes/day), **Premium** (10,000/day), **Enterpris
 - **Auto-Provisioning**: Users who log in via SSO are automatically provisioned in the MongoDB `User` collection.
 - Beyond OIDC: Includes brute-force protection (separate rate-limit bucket for failed logins), `logUnauthorizedAttempt()` that feeds the security event store, Helmet headers, and scope-based RBAC across all routes.
 
-### ☁️ Ballerina Microservice
-The `analytics-service` is written in idiomatic Ballerina — not Node.js with a `.bal` extension. It demonstrates:
+### ☁️ Ballerina Microservices
+Two Ballerina services run alongside the Node.js backend:
+
+**`analytics-service`** — JWT-secured analytics query layer:
 - JWT validation against Asgardeo's JWKS endpoint
 - Typed MongoDB stream queries
 - Ballerina `match` expressions for exhaustive status aggregation
 - Choreo-native observability (`observabilityIncluded = true`)
+
+**`ballerina-digest`** — Scheduled email integration service:
+- Cron-scheduled job (every Monday 08:00 AM) via `ballerina/task`
+- HTTP client call to the Node.js analytics endpoint
+- SMTP email delivery via `ballerina/email` (no npm dependencies)
+- Manual trigger endpoint (`POST /trigger-digest`) for testing
+- Graceful degradation — skips the week if backend is unreachable
 
 ---
 
@@ -52,7 +61,8 @@ The `analytics-service` is written in idiomatic Ballerina — not Node.js with a
 | Identity | **WSO2 Asgardeo** (OIDC + JWKS) |
 | API Gateway | WSO2 API Manager (throttling, monetisation, OpenAPI) |
 | Deployment | **WSO2 Choreo** (Cloud deployment on Azure, Auto-builds) |
-| Analytics Service | **Ballerina** 2201.8 |
+| Analytics Service | **Ballerina** 2201.8 (`analytics-service`) |
+| Digest Scheduler | **Ballerina** 2201.8 (`ballerina-digest`) |
 | Backend | Node.js / Express (monolith + microservice stubs) |
 | Frontend | React 18 + Vite (role-based dashboards, Kanban, Recharts) |
 | Database | MongoDB Atlas |
@@ -95,6 +105,11 @@ Smart-Internship-Career-Tracker/
 ├── analytics-service/
 │   ├── analytics_service.bal   Ballerina analytics service (Asgardeo JWT + MongoDB)
 │   └── Ballerina.toml          Package definition for Choreo
+├── ballerina-digest/
+│   ├── main.bal                Weekly digest scheduler (cron + HTTP client + SMTP)
+│   ├── Ballerina.toml          Package definition for Choreo
+│   ├── Config.toml.example     Placeholder config (safe to commit)
+│   └── README.md               Service-specific documentation
 ├── apim/
 │   ├── openapi.yaml            OpenAPI 3.0.3 with x-wso2-throttling-tier extensions
 │   └── policies/
@@ -202,6 +217,23 @@ cd analytics-service
 bal run
 # Service starts on :8080
 ```
+
+### Ballerina Weekly Digest Scheduler
+
+```bash
+cd ballerina-digest
+cp Config.toml.example Config.toml   # then fill in real credentials
+bal run
+# Service starts on :9090
+
+# Health check
+curl http://localhost:9090/health
+
+# Manual trigger (sends digest immediately without waiting for Monday)
+curl -X POST http://localhost:9090/trigger-digest
+```
+
+See [`ballerina-digest/README.md`](./ballerina-digest/README.md) for full configuration instructions.
 
 ---
 

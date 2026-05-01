@@ -5,3 +5,7 @@ client/.env
 server/.env
 server/uploads/*
 !server/uploads/.gitkeep
+
+# Ballerina — real credentials (never commit)
+ballerina-digest/Config.toml
+analytics-service/Config.toml
