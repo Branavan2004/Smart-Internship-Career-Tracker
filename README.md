@@ -7,7 +7,7 @@
 [![Architecture](https://img.shields.io/badge/docs-architecture-blue)](./docs/architecture.md)
 [![OpenAPI](https://img.shields.io/badge/API-OpenAPI%203.0-green)](./apim/openapi.yaml)
 [![Choreo](https://img.shields.io/badge/deploy-WSO2%20Choreo-orange)](./choreo/component.yaml)
-[![Ballerina](https://img.shields.io/badge/service-Ballerina%202201.8-blueviolet)](./analytics-service/analytics_service.bal)
+[![Ballerina](https://img.shields.io/badge/service-Ballerina%202201.13.3-blueviolet)](./ballerina-workflow/main.bal)
 
 ---
 
@@ -15,18 +15,23 @@
 
 | WSO2 Product | How it's used |
 |---|---|
-| **Asgardeo** | OIDC-based identity management with silent token refresh, 2-minute expiry warnings, and secure lock-out screens |
+| **Asgardeo** | OIDC-based identity management with **Group-Based RBAC**, silent token refresh, 2-minute expiry warnings, and secure lock-out screens |
 | **API Manager** | Full API governance with OpenAPI 3.0 specs, role-based throttling tiers, and smart 429 error handling with exponential backoff |
 | **Choreo** | Cloud-native deployment with Docker containerisation and automated GitHub Actions CI/CD |
-| **Ballerina** | Weekly digest microservice (`ballerina-digest/`) — scheduled email reports using Ballerina's built-in task, HTTP, and email stdlib |
+| **Ballerina** | Automation & Integration layer — including **Weekly Digest** (`ballerina-digest/`) and **Interview Workflow** (`ballerina-workflow/`) services |
 
-## Ballerina Microservice
-See [`ballerina-digest/`](./ballerina-digest/) — a standalone Ballerina Swan Lake service that:
-- Polls the Node.js analytics endpoint every Monday at 08:00
-- Formats application stats into a plain-text email digest
-- Sends via Gmail SMTP using Ballerina's built-in email client
-- Exposes `GET /health` for Choreo liveness probes
-- Exposes `POST /triggerDigest` for manual testing
+## Ballerina Microservices
+The project leverages **Ballerina Swan Lake 2201.13.3** for specialized integration tasks:
+
+- **[`ballerina-digest/`](./ballerina-digest/)**: Scheduled Weekly Digest
+  - Polled from Node.js analytics every Monday at 08:00
+  - Formats application stats into a plain-text email summary
+  - Delivered via Gmail SMTP with `START_TLS_AUTO` security
+
+- **[`ballerina-workflow/`](./ballerina-workflow/)**: Event-Driven Interview Checklist
+  - Triggered by a Node.js webhook when an application status changes to **"Interviewed"**
+  - Sends a personalized 8-step interview preparation guide to the student
+  - Demonstrates high-performance JSON processing and resilient "fire-and-forget" integration patterns
 
 
 
@@ -52,9 +57,11 @@ Three tiers — **Free** (100 writes/day), **Premium** (10,000/day), **Enterpris
 
 ### 🔐 Enterprise Grade Security & Identity (Asgardeo)
 - **Federated Identity**: Authentication is fully offloaded to **WSO2 Asgardeo**.
+- **Group-Based RBAC**: User roles (`admin`, `reviewer`, `student`) are mapped dynamically from **Asgardeo OIDC Groups**. 
+- **Dynamic UI Customisation**: The frontend uses a custom `useAsgardeoGroups` hook to render specialized views (`AdminDashboardPage`, `ReviewQueuePage`) based on group memberships retrieved via `/api/auth/my-groups`.
 - **JWKS Verification**: The Node.js backend cryptographically verifies Asgardeo tokens using WSO2's public keys via the `jwks-rsa` caching client.
 - **Auto-Provisioning**: Users who log in via SSO are automatically provisioned in the MongoDB `User` collection.
-- Beyond OIDC: Includes brute-force protection (separate rate-limit bucket for failed logins), `logUnauthorizedAttempt()` that feeds the security event store, Helmet headers, and scope-based RBAC across all routes.
+- Beyond OIDC: Includes brute-force protection (rate-limit buckets for failed logins), `logUnauthorizedAttempt()` for security audits, and Helmet headers.
 
 ### ☁️ Ballerina Microservices
 Two Ballerina services run alongside the Node.js backend:
@@ -66,11 +73,16 @@ Two Ballerina services run alongside the Node.js backend:
 - Choreo-native observability (`observabilityIncluded = true`)
 
 **`ballerina-digest`** — Scheduled email integration service:
-- Interval-scheduled job (every 7 days starting next Monday 08:00 AM) via `ballerina/task`
+- Interval-scheduled job via `ballerina/task`
 - HTTP client call to the Node.js analytics endpoint
-- SMTP email delivery via `ballerina/email` (no npm dependencies)
+- SMTP email delivery via `ballerina/email` with `START_TLS_AUTO`
 - Manual trigger endpoint (`POST /triggerDigest`) for testing
-- Graceful degradation — skips the week if backend is unreachable
+
+**`ballerina-workflow`** — Event-driven preparation checklist:
+- Webhook-triggered instantly upon status change to "Interviewed"
+- Personalized interview checklists (8 steps to success)
+- Demonstrates resilient fire-and-forget integration with Node.js
+- Zero third-party library requirements (enterprise-ready standard library)
 
 ---
 
@@ -81,8 +93,8 @@ Two Ballerina services run alongside the Node.js backend:
 | Identity | **WSO2 Asgardeo** (OIDC + JWKS) |
 | API Gateway | WSO2 API Manager (throttling, monetisation, OpenAPI) |
 | Deployment | **WSO2 Choreo** (Cloud deployment on Azure, Auto-builds) |
-| Analytics Service | **Ballerina** 2201.8 (`analytics-service`) |
-| Digest Scheduler | **Ballerina** 2201.13.3 (`ballerina-digest`) |
+| Analytics Service | **Ballerina** 2201.13.3 (`analytics-service`) |
+| Workflow & Digest | **Ballerina** 2201.13.3 (`ballerina-workflow`, `ballerina-digest`) |
 | Backend | Node.js / Express (monolith + microservice stubs) |
 | Frontend | React 18 + Vite (role-based dashboards, Kanban, Recharts) |
 | Database | MongoDB Atlas |
