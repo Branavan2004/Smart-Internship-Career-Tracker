@@ -1,9 +1,10 @@
-schemaVersion: 1.1
+schemaVersion: 1.2
 endpoints:
   - name: web-app
-    type: REST
-    networkVisibilities:
-      - Public
+    displayName: CarrierX Frontend
     service:
-      port: 8080
       basePath: /
+      port: 8080
+      type: REST
+      networkVisibilities:
+        - Public

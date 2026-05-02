@@ -1,9 +1,10 @@
-schemaVersion: 1.1
+schemaVersion: 1.2
 endpoints:
-  - name: default-endpoint
-    type: REST
-    networkVisibilities:
-      - Public
+  - name: rest-api
+    displayName: CarrierX Backend API
     service:
-      port: 8080
       basePath: /api
+      port: 8080
+      type: REST
+      networkVisibilities:
+        - Public
