@@ -3,7 +3,7 @@ endpoints:
     - name: default-endpoint
       displayName: default-endpoint
       service:
-        basePath: /api
+        basePath: /
         port: 8080
       type: REST
       networkVisibilities:
