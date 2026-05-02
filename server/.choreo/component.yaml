@@ -5,3 +5,5 @@ endpoints:
     type: REST
     networkVisibility: Public
     context: /
+    healthCheck:
+      path: /api/health
