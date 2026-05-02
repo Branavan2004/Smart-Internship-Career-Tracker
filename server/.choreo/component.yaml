@@ -1,0 +1,7 @@
+schemaVersion: 1.1
+endpoints:
+  - name: default-endpoint
+    port: 8080
+    type: REST
+    networkVisibility: Public
+    context: /
