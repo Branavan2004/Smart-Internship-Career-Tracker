@@ -13,13 +13,14 @@ import "./styles/index.css";
 // Initialize Global Interceptors
 setupInterceptors(apiClient);
 
-const redirectUrl = typeof window !== "undefined" ? window.location.origin : import.meta.env.VITE_ASGARDEO_REDIRECT_URL || "http://localhost:5173";
+const signInUrl = import.meta.env.VITE_ASGARDEO_SIGN_IN_URL || (typeof window !== "undefined" ? window.location.origin : "http://localhost:5173");
+const signOutUrl = import.meta.env.VITE_ASGARDEO_SIGN_OUT_URL || (typeof window !== "undefined" ? window.location.origin : "http://localhost:5173");
 
 const asgardeoConfig = {
-    signInRedirectURL: redirectUrl,
-    signOutRedirectURL: redirectUrl,
+    signInRedirectURL: signInUrl,
+    signOutRedirectURL: signOutUrl,
     clientID: import.meta.env.VITE_ASGARDEO_CLIENT_ID || "your_client_id",
-    baseUrl: "https://api.asgardeo.io/t/org900gq",
+    baseUrl: import.meta.env.VITE_ASGARDEO_BASE_URL || "https://api.asgardeo.io/t/org900gq",
     scope: [ "openid", "profile", "email" ],
     endpoints: {
         wellKnownEndpoint: "https://api.asgardeo.io/t/org900gq/oauth2/token/.well-known/openid-configuration"
