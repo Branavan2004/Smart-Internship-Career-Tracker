@@ -317,3 +317,21 @@ cd analytics-service && bal test
 - JWT secrets must be ≥ 64 characters in production
 - The `quotaResetAt` field uses UTC midnight — ensure server timezone is UTC in production
 - The in-memory `metricsStore` resets on restart — wire to Prometheus/InfluxDB for persistence
+
+## Deployment Notes
+
+### Frontend
+
+- build command: `npm run build`
+- output directory: `dist`
+- set the build-time `VITE_API_URL` to the deployed backend API ending with `/api`
+- example: `https://your-server.choreoapps.dev/api`
+
+### Backend
+
+- build command: `npm install`
+- start command: `npm run start`
+- set `CLIENT_URL` to the deployed frontend origin
+- if you use Google login, set `GOOGLE_CALLBACK_URL` to `https://your-server.choreoapps.dev/api/auth/google/callback`
+- configure all backend auth environment variables
+- enable secure cookies in production using HTTPS
