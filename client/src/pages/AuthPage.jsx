@@ -8,6 +8,9 @@ const AuthPage = () => {
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
+  const loginStartError =
+    "Sign-in did not start. Check the Asgardeo client ID, base URL, and redirect URLs for this deployment.";
+
   useEffect(() => {
     if (state?.isAuthenticated) {
       navigate("/");
@@ -16,14 +19,18 @@ const AuthPage = () => {
 
   const handleLogin = async (e) => {
     if (e) e.preventDefault();
-    alert("Button clicked! Starting Asgardeo signIn...");
     setError("");
     setSubmitting(true);
+
+    const redirectFallback = window.setTimeout(() => {
+      setSubmitting(false);
+      setError(loginStartError);
+    }, 4000);
+
     try {
       await signIn();
-      alert("signIn function finished (you should be redirecting now)");
     } catch (submitError) {
-      alert("signIn failed! " + submitError?.message);
+      window.clearTimeout(redirectFallback);
       console.error("Asgardeo signIn failed:", submitError);
       setError(`Authentication failed: ${submitError?.message || "Please try again."}`);
       setSubmitting(false);
@@ -94,10 +101,10 @@ const AuthPage = () => {
           <div className="w-full bg-surface-container border border-outline-variant rounded-xl p-[32px] shadow-[0_8px_24px_rgba(0,0,0,0.4)]">
             {/* Tab Switcher */}
             <div className="flex border-b border-outline-variant mb-[32px]">
-              <button className="flex-1 pb-[8px] border-b-2 border-primary-container font-label-caps text-[12px] text-primary-container transition-colors uppercase">
+              <button type="button" className="flex-1 pb-[8px] border-b-2 border-primary-container font-label-caps text-[12px] text-primary-container transition-colors uppercase">
                 Login
               </button>
-              <button className="flex-1 pb-[8px] border-b-2 border-transparent font-label-caps text-[12px] text-on-surface-variant hover:text-on-surface transition-colors uppercase">
+              <button type="button" className="flex-1 pb-[8px] border-b-2 border-transparent font-label-caps text-[12px] text-on-surface-variant hover:text-on-surface transition-colors uppercase">
                 Register
               </button>
             </div>
@@ -161,10 +168,10 @@ const AuthPage = () => {
             
             {/* Social Auth */}
             <div className="flex flex-col sm:flex-row gap-[16px]">
-              <button onClick={handleLogin} className="flex-1 flex items-center justify-center gap-[8px] bg-surface-container-high border border-outline-variant rounded-lg py-[8px] px-[16px] hover:bg-surface-bright hover:border-outline transition-all group disabled:opacity-50" disabled={submitting}>
+              <button type="button" onClick={handleLogin} className="flex-1 flex items-center justify-center gap-[8px] bg-surface-container-high border border-outline-variant rounded-lg py-[8px] px-[16px] hover:bg-surface-bright hover:border-outline transition-all group disabled:opacity-50" disabled={submitting}>
                 <span className="font-code-sm text-[12px] text-on-surface group-hover:text-white transition-colors">Google</span>
               </button>
-              <button onClick={handleLogin} className="flex-1 flex items-center justify-center gap-[8px] bg-surface-container-high border border-outline-variant rounded-lg py-[8px] px-[16px] hover:bg-surface-bright hover:border-outline transition-all group disabled:opacity-50" disabled={submitting}>
+              <button type="button" onClick={handleLogin} className="flex-1 flex items-center justify-center gap-[8px] bg-surface-container-high border border-outline-variant rounded-lg py-[8px] px-[16px] hover:bg-surface-bright hover:border-outline transition-all group disabled:opacity-50" disabled={submitting}>
                 <span className="material-symbols-outlined text-secondary text-[18px]">security</span>
                 <span className="font-code-sm text-[12px] text-on-surface group-hover:text-white transition-colors">Asgardeo SSO</span>
               </button>

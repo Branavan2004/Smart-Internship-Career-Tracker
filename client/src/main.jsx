@@ -13,8 +13,12 @@ import "./styles/index.css";
 // Initialize Global Interceptors
 setupInterceptors(apiClient);
 
-const signInUrl = import.meta.env.VITE_ASGARDEO_SIGN_IN_URL || (typeof window !== "undefined" ? window.location.origin : "http://localhost:5173");
-const signOutUrl = import.meta.env.VITE_ASGARDEO_SIGN_OUT_URL || (typeof window !== "undefined" ? window.location.origin : "http://localhost:5173");
+const defaultRedirectUrl =
+  import.meta.env.VITE_ASGARDEO_REDIRECT_URL ||
+  (typeof window !== "undefined" ? window.location.origin : "http://localhost:5173");
+
+const signInUrl = import.meta.env.VITE_ASGARDEO_SIGN_IN_URL || defaultRedirectUrl;
+const signOutUrl = import.meta.env.VITE_ASGARDEO_SIGN_OUT_URL || defaultRedirectUrl;
 
 const asgardeoConfig = {
     signInRedirectURL: signInUrl,

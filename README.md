@@ -275,8 +275,10 @@ See [`ballerina-digest/README.md`](./ballerina-digest/README.md) for full config
 1. Create an OIDC application in your Asgardeo tenant
 2. Set redirect URI to `http://localhost:5173`
 3. Set `VITE_ASGARDEO_CLIENT_ID` and `VITE_ASGARDEO_BASE_URL` in `client/.env`
-4. Map Asgardeo user groups (`admin`, `reviewer`) to system roles
-5. Add `tenantId` and `tier` as custom OIDC claims
+4. For deployed builds, set `VITE_ASGARDEO_SIGN_IN_URL` and `VITE_ASGARDEO_SIGN_OUT_URL` to your frontend origin
+5. `VITE_ASGARDEO_REDIRECT_URL` can be used as a shared fallback for both redirect URLs
+6. Map Asgardeo user groups (`admin`, `reviewer`, `student`) to system roles
+7. Add `tenantId` and `tier` as custom OIDC claims
 
 ### API Manager Setup
 1. Import `apim/openapi.yaml` into the WSO2 Publisher portal
