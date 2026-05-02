@@ -33,6 +33,8 @@ const startServer = async () => {
   } catch (error) {
     console.error("Asgardeo setup failed (server still running):", error.message);
   }
+  
+  console.log("=== SERVER IS READY AND RUNNING ===");
 };
 
 startServer();

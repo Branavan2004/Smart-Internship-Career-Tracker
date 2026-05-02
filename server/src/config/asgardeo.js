@@ -13,7 +13,7 @@ export const isAsgardeoConfigured = Boolean(
 
 export const setupAsgardeoStrategy = async (passport) => {
   if (!isAsgardeoConfigured) {
-    console.warn("Asgardeo OIDC is disabled because ASGARDEO_CLIENT_ID, ASGARDEO_CLIENT_SECRET, ASGARDEO_BASE_URL, or ASGARDEO_CALLBACK_URL is missing.");
+    console.warn("WARNING: Asgardeo OIDC variables are missing. Asgardeo login is DISABLED, but the server will continue to run with local authentication.");
     return;
   }
 
