@@ -11,8 +11,8 @@ RUN npm ci --only=production
 # Copy the rest of the server code
 COPY . .
 
-# Expose the backend port
-EXPOSE 5001
+# Expose the backend port (Choreo default is 8080)
+EXPOSE 8080
 
 # Start the server using the entry point identified in package.json
 CMD ["node", "src/server.js"]
