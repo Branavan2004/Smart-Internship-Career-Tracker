@@ -13,7 +13,7 @@ const AppShell = () => {
       {/* TopNavBar */}
       <nav className="fixed top-0 w-full h-14 border-b border-white/5 bg-[#111111] flex items-center justify-between px-6 z-50 shadow-none">
         <div className="flex items-center gap-4">
-          <span className="text-xl font-bold text-white font-h1">Stitch Smart Tracker</span>
+          <span className="text-xl font-bold text-white font-h1">CarrierX Smart Tracker</span>
         </div>
         <div className="flex items-center gap-6">
           <span className="font-body-md text-sm tracking-tight text-gray-400">Choreo · Connected</span>
@@ -35,7 +35,7 @@ const AppShell = () => {
       {/* SideNavBar */}
       <aside className="fixed left-0 top-0 h-full w-[260px] border-r border-white/5 bg-[#111111] shadow-none flex flex-col py-6 space-y-2 z-40 pt-20 hidden md:flex">
         <div className="px-6 mb-6">
-          <h2 className="text-2xl font-black text-white font-h1">stitch.</h2>
+          <h2 className="text-2xl font-black text-white font-h1">CarrierX.</h2>
           <p className="text-gray-400 font-body-md text-xs tracking-wide">Smart Tracker</p>
         </div>
         

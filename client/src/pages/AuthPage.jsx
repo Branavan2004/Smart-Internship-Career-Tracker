@@ -45,7 +45,7 @@ const AuthPage = () => {
         
         {/* Header */}
         <div className="flex items-baseline gap-xs z-10">
-          <h1 className="font-h2 text-[32px] font-extrabold tracking-tight">stitch.</h1>
+          <h1 className="font-h2 text-[32px] font-extrabold tracking-tight">CarrierX.</h1>
           <span className="font-label-caps text-[12px] text-on-surface-variant uppercase tracking-widest ml-2">Smart Tracker</span>
         </div>
         
@@ -83,7 +83,7 @@ const AuthPage = () => {
       <div className="w-full md:w-1/2 flex flex-col relative bg-background">
         {/* Mobile Header (Hidden on Desktop) */}
         <div className="flex md:hidden items-center justify-center p-[32px] border-b border-outline-variant bg-surface-container-lowest">
-          <h1 className="font-h3 text-[24px] font-extrabold tracking-tight">stitch.</h1>
+          <h1 className="font-h3 text-[24px] font-extrabold tracking-tight">CarrierX.</h1>
         </div>
         
         <div className="flex-1 flex flex-col items-center justify-center p-[24px] sm:p-[48px] w-full max-w-lg mx-auto relative z-10">
@@ -145,7 +145,7 @@ const AuthPage = () => {
                 disabled={submitting}
                 className="w-full bg-primary-container text-on-primary-container font-label-caps text-[12px] uppercase tracking-widest py-[16px] rounded-lg hover:-translate-y-[1px] hover:shadow-[0_4px_12px_rgba(255,115,0,0.2)] transition-all active:translate-y-0 disabled:opacity-50"
               >
-                {submitting ? "Redirecting..." : "Sign in to Stitch"}
+                {submitting ? "Redirecting..." : "Sign in to CarrierX"}
               </button>
             </form>
             
@@ -176,7 +176,7 @@ const AuthPage = () => {
             <span>·</span>
             <a href="#" className="hover:text-primary-container transition-colors">Terms</a>
             <span>·</span>
-            <span>© 2025 Stitch</span>
+            <span>© 2025 CarrierX</span>
           </div>
         </div>
       </div>
