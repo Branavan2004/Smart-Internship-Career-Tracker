@@ -16,11 +16,14 @@ const AuthPage = () => {
 
   const handleLogin = async (e) => {
     if (e) e.preventDefault();
+    alert("Button clicked! Starting Asgardeo signIn...");
     setError("");
     setSubmitting(true);
     try {
       await signIn();
+      alert("signIn function finished (you should be redirecting now)");
     } catch (submitError) {
+      alert("signIn failed! " + submitError?.message);
       console.error("Asgardeo signIn failed:", submitError);
       setError(`Authentication failed: ${submitError?.message || "Please try again."}`);
       setSubmitting(false);
