@@ -9,8 +9,7 @@ components:
     startCommand: node server/src/server.js
     endpoints:
       - name: rest-api
-        service:
-          port: 8080
+        port: 8080
         type: REST
         networkVisibility: Public
         context: /api
@@ -26,8 +25,7 @@ components:
     outputDirectory: client/dist
     endpoints:
       - name: web-app
-        service:
-          port: 8080
+        port: 8080
         type: HTTP
         networkVisibility: Public
         context: /
