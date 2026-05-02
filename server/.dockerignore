@@ -1,4 +1,8 @@
 node_modules
+npm-debug.log
 .env
-coverage/
-tests/
+.env.*
+.git
+.gitignore
+README.md
+.choreo
