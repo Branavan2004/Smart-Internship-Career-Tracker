@@ -1,9 +1,9 @@
 schemaVersion: 1.1
 endpoints:
   - name: default-endpoint
-    port: 8080
-    type: REST
-    networkVisibility: Public
-    context: /api
-    healthCheck:
-      path: /api/health
+    service:
+      port: 8080
+      type: REST
+      basePath: /api
+    networkVisibilities:
+      - Public

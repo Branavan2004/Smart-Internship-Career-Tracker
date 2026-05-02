@@ -1,7 +1,9 @@
 schemaVersion: 1.1
 endpoints:
-  - name: default-endpoint
-    port: 8080
-    type: REST
-    networkVisibility: Public
-    context: /
+  - name: web-app
+    service:
+      port: 8080
+      type: REST
+      basePath: /
+    networkVisibilities:
+      - Public
