@@ -19,8 +19,22 @@ export const AuthProvider = ({ children }) => {
     on 
   } = useAuthContext();
 
+  const [token, setToken] = useState(null);
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+
+  const getAccessTokenWithRetry = async (attempts = 8, delayMs = 400) => {
+    for (let attempt = 0; attempt < attempts; attempt += 1) {
+      const nextToken = await getAccessToken();
+      if (nextToken) {
+        return nextToken;
+      }
+
+      await new Promise((resolve) => window.setTimeout(resolve, delayMs));
+    }
+
+    return null;
+  };
 
   // Sync user profile from backend when authenticated
   const loadCurrentUser = async () => {
@@ -30,11 +44,12 @@ export const AuthProvider = ({ children }) => {
     }
 
     try {
-      const accessToken = await getAccessToken();
+      const accessToken = await getAccessTokenWithRetry();
       if (!accessToken) {
         throw new Error("Asgardeo access token is not available yet.");
       }
 
+      setToken(accessToken);
       storeAccessToken(accessToken);
 
       const response = await apiClient.get("/auth/me", {
@@ -54,13 +69,15 @@ export const AuthProvider = ({ children }) => {
     if (state.isAuthenticated) {
       loadCurrentUser();
     } else {
+      setToken(null);
       setUser(null);
+      storeAccessToken(null);
       setLoading(state.isLoading);
     }
   }, [state.isAuthenticated, state.isLoading]);
 
   useEffect(() => {
-    registerAccessTokenGetter(getAccessToken);
+    registerAccessTokenGetter(() => getAccessTokenWithRetry());
 
     return () => {
       clearAccessTokenGetter();
@@ -69,6 +86,7 @@ export const AuthProvider = ({ children }) => {
 
   useEffect(() => {
     const handleSessionExpired = () => {
+      setToken(null);
       storeAccessToken(null);
       setUser(null);
       signOut().catch(() => null);
@@ -86,6 +104,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   const logout = async () => {
+    setToken(null);
     storeAccessToken(null);
     await signOut();
   };
@@ -97,14 +116,14 @@ export const AuthProvider = ({ children }) => {
   return (
     <AuthContext.Provider
       value={{
-        token: state.accessToken, // Provided by SDK
+        token,
         user,
         loading,
-        isAuthenticated: state.isAuthenticated,
+        isAuthenticated: Boolean(state.isAuthenticated && token),
         login,
         logout,
         updateUser,
-        getAccessToken // Exporting for SessionManager
+        getAccessToken: getAccessTokenWithRetry
       }}
     >
       {children}

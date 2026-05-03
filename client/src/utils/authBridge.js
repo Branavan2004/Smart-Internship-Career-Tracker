@@ -1,4 +1,5 @@
 const TOKEN_STORAGE_KEY = "careerTrackerToken";
+export const TOKEN_NOT_READY_MESSAGE = "Authentication token is not ready yet. Please wait a moment and try again.";
 
 let accessTokenGetter = null;
 
@@ -51,4 +52,16 @@ export const resolveAccessToken = async () => {
   }
 
   return null;
+};
+
+export const createTokenNotReadyError = () => {
+  const error = new Error(TOKEN_NOT_READY_MESSAGE);
+  error.code = "AUTH_TOKEN_NOT_READY";
+  error.response = {
+    status: 401,
+    data: {
+      message: TOKEN_NOT_READY_MESSAGE
+    }
+  };
+  return error;
 };

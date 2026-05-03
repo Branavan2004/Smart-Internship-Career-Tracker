@@ -1,6 +1,6 @@
 import axios from "axios";
 import { apiBaseUrl, deploymentApiErrorMessage, getApiConnectionErrorMessage } from "../utils/runtimeConfig";
-import { resolveAccessToken } from "../utils/authBridge";
+import { createTokenNotReadyError, resolveAccessToken } from "../utils/authBridge";
 
 const createApiConfigurationError = () => {
   const error = new Error(deploymentApiErrorMessage);
@@ -41,12 +41,14 @@ apiClient.interceptors.request.use((config) => {
   }
 
   return resolveAccessToken().then((token) => {
-    if (token) {
-      config.headers = {
-        ...(config.headers || {}),
-        Authorization: `Bearer ${token}`
-      };
+    if (!token) {
+      return Promise.reject(createTokenNotReadyError());
     }
+
+    config.headers = {
+      ...(config.headers || {}),
+      Authorization: `Bearer ${token}`
+    };
 
     return config;
   });
