@@ -48,6 +48,20 @@ export const AuthProvider = ({ children }) => {
     }
   }, [state.isAuthenticated, state.isLoading]);
 
+  useEffect(() => {
+    const handleSessionExpired = () => {
+      localStorage.removeItem("careerTrackerToken");
+      setUser(null);
+      signOut().catch(() => null);
+    };
+
+    window.addEventListener("careerTracker:session-expired", handleSessionExpired);
+
+    return () => {
+      window.removeEventListener("careerTracker:session-expired", handleSessionExpired);
+    };
+  }, [signOut]);
+
   const login = async () => {
     await signIn();
   };

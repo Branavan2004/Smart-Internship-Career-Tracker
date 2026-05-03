@@ -1,10 +1,8 @@
 /**
  * Global Axios interceptor logic for the Smart Internship Tracker.
- * Handles authentication refreshes (401) and APIM rate-limiting (429) with exponential backoff.
+ * Handles APIM rate-limiting (429) and reports session expiry (401).
  */
 export const setupInterceptors = (apiClient) => {
-  let refreshPromise = null;
-
   // Request Interceptor
   apiClient.interceptors.request.use((config) => {
     const token = localStorage.getItem("careerTrackerToken");
@@ -77,40 +75,13 @@ export const setupInterceptors = (apiClient) => {
         return Promise.reject(error);
       }
 
-      // --- Handle 401 Unauthorized (Token Refresh) ---
-      const isRefreshRequest = originalRequest.url?.includes("/auth/refresh");
-      const isLoginRequest = originalRequest.url?.includes("/auth/login");
-      const isRegisterRequest = originalRequest.url?.includes("/auth/register");
-
-      if (
-        statusCode === 401 &&
-        !originalRequest._retry &&
-        !isRefreshRequest &&
-        !isLoginRequest &&
-        !isRegisterRequest
-      ) {
-        originalRequest._retry = true;
-
-        try {
-          if (!refreshPromise) {
-            refreshPromise = apiClient.post("/auth/refresh");
-          }
-
-          const refreshResponse = await refreshPromise;
-          const nextAccessToken = refreshResponse.data.accessToken || refreshResponse.data.token;
-
-          localStorage.setItem("careerTrackerToken", nextAccessToken);
-          window.dispatchEvent(new CustomEvent("careerTracker:token-refreshed", { detail: nextAccessToken }));
-
-          originalRequest.headers.Authorization = `Bearer ${nextAccessToken}`;
-          return apiClient(originalRequest);
-        } catch (refreshError) {
-          localStorage.removeItem("careerTrackerToken");
-          window.dispatchEvent(new Event("careerTracker:session-expired"));
-          return Promise.reject(refreshError);
-        } finally {
-          refreshPromise = null;
-        }
+      // --- Handle 401 Unauthorized ---
+      // The current production auth flow uses Asgardeo bearer tokens, not the
+      // legacy backend refresh-token cookie. Retrying `/auth/refresh` here only
+      // creates noisy "Refresh token is missing." errors.
+      if (statusCode === 401) {
+        localStorage.removeItem("careerTrackerToken");
+        window.dispatchEvent(new Event("careerTracker:session-expired"));
       }
 
       return Promise.reject(error);
