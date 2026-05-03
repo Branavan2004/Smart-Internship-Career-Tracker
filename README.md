@@ -59,7 +59,7 @@ Three tiers — **Free** (100 writes/day), **Premium** (10,000/day), **Enterpris
 - **Federated Identity**: Authentication is fully offloaded to **WSO2 Asgardeo**.
 - **Group-Based RBAC**: User roles (`admin`, `reviewer`, `student`) are mapped dynamically from **Asgardeo OIDC Groups**. 
 - **Dynamic UI Customisation**: The frontend uses a custom `useAsgardeoGroups` hook to render specialized views (`AdminDashboardPage`, `ReviewQueuePage`) based on group memberships retrieved via `/api/auth/my-groups`.
-- **JWKS Verification**: The Node.js backend cryptographically verifies Asgardeo tokens using WSO2's public keys via the `jwks-rsa` caching client.
+- **JWKS Verification**: The Node.js backend cryptographically verifies Asgardeo tokens using WSO2's public keys via the `jwks-rsa` caching client. The frontend sends **OIDC ID Tokens (JWTs)** (using `getIDToken()`) rather than opaque access tokens to ensure verification succeeds.
 - **Auto-Provisioning**: Users who log in via SSO are automatically provisioned in the MongoDB `User` collection.
 - Beyond OIDC: Includes brute-force protection (rate-limit buckets for failed logins), `logUnauthorizedAttempt()` for security audits, and Helmet headers.
 
@@ -272,13 +272,15 @@ See [`ballerina-digest/README.md`](./ballerina-digest/README.md) for full config
 ## WSO2 Integration
 
 ### Asgardeo Setup
-1. Create an OIDC application in your Asgardeo tenant
-2. Set redirect URI to `http://localhost:5173`
-3. Set `VITE_ASGARDEO_CLIENT_ID` and `VITE_ASGARDEO_BASE_URL` in `client/.env`
-4. For deployed builds, set `VITE_ASGARDEO_SIGN_IN_URL` and `VITE_ASGARDEO_SIGN_OUT_URL` to your frontend origin
-5. `VITE_ASGARDEO_REDIRECT_URL` can be used as a shared fallback for both redirect URLs
-6. Map Asgardeo user groups (`admin`, `reviewer`, `student`) to system roles
-7. Add `tenantId` and `tier` as custom OIDC claims
+1. Create an OIDC application in your Asgardeo tenant.
+2. Set redirect URIs to include both your local (`http://localhost:5173`) and production (e.g., `https://...choreoapps.dev`) URLs.
+3. Configure `asgardeoConfig` in `client/src/main.jsx`. **Crucial**: Request the `groups` scope (`scope: [ "openid", "profile", "email", "groups" ]`) so roles map correctly.
+4. **Environment Variables**:
+   - `VITE_ASGARDEO_CLIENT_ID`: Your Asgardeo application's Client ID.
+   - `VITE_ASGARDEO_BASE_URL`: Must be exactly `https://api.asgardeo.io/t/[YOUR_ORG]` (Do **NOT** append `/oauth2/token`).
+   - `VITE_ASGARDEO_REDIRECT_URL`: Set to your frontend origin URL (e.g., your Choreo deployment URL).
+5. **Role Mapping**: Map Asgardeo user groups (`admin`, `reviewer`, `student`) to system roles.
+6. Add `tenantId` and `tier` as custom OIDC claims.
 
 ### API Manager Setup
 1. Import `apim/openapi.yaml` into the WSO2 Publisher portal
@@ -287,11 +289,13 @@ See [`ballerina-digest/README.md`](./ballerina-digest/README.md) for full config
 4. Subscribe applications using the Free / Premium / Enterprise tiers
 
 ### Choreo Deployment
-1. Push this repository to GitHub
-2. Connect to WSO2 Choreo → Create Project → Import from GitHub
-3. Choreo auto-detects the three components from `.choreo/component.yaml`
-4. Inject secrets (MongoDB URI, Asgardeo credentials) via Choreo's secret management
-5. Deploy — Choreo handles Docker build, Kubernetes orchestration, and gateway config
+1. Push this repository to GitHub.
+2. Connect to WSO2 Choreo → Create Project → Import from GitHub.
+3. Choreo auto-detects components from `.choreo/component.yaml`.
+4. Inject secrets via Choreo's Environment Variables panel.
+   - **Backend**: Set `PORT=8080`, `MONGODB_URI`, `JWT_SECRET`, and `CLIENT_URL`. For Asgardeo: `ASGARDEO_ORG_NAME` (e.g., `org900gq`).
+   - **Frontend**: Set `VITE_API_URL` to your backend's URL ending in `/api` (e.g., `https://[backend-id].choreoapps.dev/api`). Set `VITE_ASGARDEO_REDIRECT_URL` to the frontend's own Choreo URL.
+5. Deploy — Choreo handles Docker build, Kubernetes orchestration, and gateway config.
 
 ---
 
