@@ -66,13 +66,16 @@ export const AuthProvider = ({ children }) => {
   };
 
   useEffect(() => {
+    const isAuthCallback = new URLSearchParams(window.location.search).has("code");
+
     if (state.isAuthenticated) {
       loadCurrentUser();
     } else {
       setToken(null);
       setUser(null);
       storeAccessToken(null);
-      setLoading(state.isLoading);
+      // Keep loading true if it's a callback URL so Asgardeo can process it
+      setLoading(state.isLoading || isAuthCallback);
     }
   }, [state.isAuthenticated, state.isLoading]);
 
