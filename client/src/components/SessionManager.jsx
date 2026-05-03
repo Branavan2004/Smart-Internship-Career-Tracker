@@ -9,7 +9,7 @@ import { storeAccessToken } from "../utils/authBridge";
 const SessionManager = () => {
   const { 
     state, 
-    getAccessToken, 
+    getIDToken, 
     getDecodedIDToken, 
     signIn, 
     signOut 
@@ -35,7 +35,7 @@ const SessionManager = () => {
     
     setIsRefreshing(true);
     try {
-      const nextToken = await getAccessToken();
+      const nextToken = await getIDToken();
       storeAccessToken(nextToken || null);
     } catch (error) {
       console.error("Silent refresh failed:", error);
@@ -44,7 +44,7 @@ const SessionManager = () => {
       // Small delay to make the "fade out" noticeable
       setTimeout(() => setIsRefreshing(false), 2000);
     }
-  }, [state.isAuthenticated, getAccessToken]);
+  }, [state.isAuthenticated, getIDToken]);
 
   const handleSessionExpired = useCallback(() => {
     clearAllIntervals();
@@ -155,7 +155,7 @@ const SessionManager = () => {
                 style={styles.primaryButton} 
                 onClick={async () => {
                   setWarningModal({ show: false, secondsLeft: 0 });
-                  const nextToken = await getAccessToken();
+                  const nextToken = await getIDToken();
                   storeAccessToken(nextToken || null);
                 }}
               >
