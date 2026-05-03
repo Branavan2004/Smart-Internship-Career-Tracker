@@ -14,7 +14,7 @@ export const AuthProvider = ({ children }) => {
     state, 
     signIn, 
     signOut, 
-    getAccessToken, 
+    getIDToken,
     getBasicUserInfo,
     on 
   } = useAuthContext();
@@ -23,9 +23,11 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
+  // Use getIDToken — it returns a signed JWT that the backend can verify via JWKS.
+  // getAccessToken() returns an opaque token that is NOT a JWT and fails JWKS verification.
   const getAccessTokenWithRetry = async (attempts = 15, delayMs = 600) => {
     for (let attempt = 0; attempt < attempts; attempt += 1) {
-      const nextToken = await getAccessToken();
+      const nextToken = await getIDToken();
       if (nextToken) {
         return nextToken;
       }
