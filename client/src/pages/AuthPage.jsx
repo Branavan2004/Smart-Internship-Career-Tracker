@@ -1,21 +1,44 @@
-import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useEffect, useMemo } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import { useAuthContext } from "@asgardeo/auth-react";
 
 const AuthPage = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { state, signIn } = useAuthContext();
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [callbackTimedOut, setCallbackTimedOut] = useState(false);
 
   const loginStartError =
     "Sign-in did not start. Check the Asgardeo client ID, base URL, and redirect URLs for this deployment.";
+
+  const callbackParams = useMemo(() => new URLSearchParams(location.search), [location.search]);
+  const isOAuthCallback =
+    callbackParams.has("code") ||
+    callbackParams.has("session_state") ||
+    callbackParams.has("state");
 
   useEffect(() => {
     if (state?.isAuthenticated) {
       navigate("/");
     }
   }, [state?.isAuthenticated, navigate]);
+
+  useEffect(() => {
+    if (!isOAuthCallback || state?.isAuthenticated || state?.isLoading) {
+      setCallbackTimedOut(false);
+      return undefined;
+    }
+
+    const timer = window.setTimeout(() => {
+      setCallbackTimedOut(true);
+    }, 5000);
+
+    return () => {
+      window.clearTimeout(timer);
+    };
+  }, [isOAuthCallback, state?.isAuthenticated, state?.isLoading]);
 
   const handleLogin = async (e) => {
     if (e) e.preventDefault();
@@ -44,6 +67,19 @@ const AuthPage = () => {
       </div>
     );
   }
+
+  if (isOAuthCallback && !callbackTimedOut && !error) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <span className="font-mono-data text-primary-container animate-pulse uppercase tracking-[0.2em]">Completing sign-in...</span>
+      </div>
+    );
+  }
+
+  const callbackError =
+    callbackParams.get("error_description") ||
+    callbackParams.get("error") ||
+    (callbackTimedOut ? "Sign-in completed at Asgardeo, but the app did not finish the login handoff." : "");
 
   return (
     <div className="bg-background text-on-background min-h-screen flex flex-col md:flex-row antialiased">
@@ -115,6 +151,12 @@ const AuthPage = () => {
             {error && (
               <div className="w-full mb-6 p-4 bg-error/10 border border-error/20 rounded-xl text-error text-xs font-medium">
                 {error}
+              </div>
+            )}
+
+            {!error && callbackError && (
+              <div className="w-full mb-6 p-4 bg-error/10 border border-error/20 rounded-xl text-error text-xs font-medium">
+                {callbackError}
               </div>
             )}
             
