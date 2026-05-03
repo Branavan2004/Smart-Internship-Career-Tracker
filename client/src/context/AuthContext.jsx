@@ -49,17 +49,23 @@ export const AuthProvider = ({ children }) => {
         throw new Error("Asgardeo access token is not available yet.");
       }
 
+      // Set token immediately so isAuthenticated becomes true
+      // regardless of whether the backend /auth/me call succeeds
       setToken(accessToken);
       storeAccessToken(accessToken);
 
-      const response = await apiClient.get("/auth/me", {
-        headers: {
-          Authorization: `Bearer ${accessToken}`
-        }
-      });
-      setUser(response.data.user);
+      try {
+        const response = await apiClient.get("/auth/me", {
+          headers: {
+            Authorization: `Bearer ${accessToken}`
+          }
+        });
+        setUser(response.data.user);
+      } catch (backendError) {
+        console.warn("Backend /auth/me unavailable, using Asgardeo identity only:", backendError?.response?.data || backendError.message);
+      }
     } catch (error) {
-      console.error("Failed to load user:", error?.response?.data || error.message);
+      console.error("Failed to get access token:", error?.response?.data || error.message);
     } finally {
       setLoading(false);
     }
@@ -122,7 +128,9 @@ export const AuthProvider = ({ children }) => {
         token,
         user,
         loading,
-        isAuthenticated: Boolean(state.isAuthenticated && token),
+        // isAuthenticated is based purely on Asgardeo state + having a token.
+        // We do NOT require a successful backend /auth/me call to unblock navigation.
+        isAuthenticated: state.isAuthenticated && Boolean(token),
         login,
         logout,
         updateUser,
