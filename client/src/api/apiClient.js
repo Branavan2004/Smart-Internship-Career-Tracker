@@ -1,5 +1,6 @@
 import axios from "axios";
 import { apiBaseUrl, deploymentApiErrorMessage, getApiConnectionErrorMessage } from "../utils/runtimeConfig";
+import { resolveAccessToken } from "../utils/authBridge";
 
 const createApiConfigurationError = () => {
   const error = new Error(deploymentApiErrorMessage);
@@ -39,15 +40,16 @@ apiClient.interceptors.request.use((config) => {
     return Promise.reject(createApiConfigurationError());
   }
 
-  const token = localStorage.getItem("careerTrackerToken");
-  if (token) {
-    config.headers = {
-      ...(config.headers || {}),
-      Authorization: `Bearer ${token}`
-    };
-  }
+  return resolveAccessToken().then((token) => {
+    if (token) {
+      config.headers = {
+        ...(config.headers || {}),
+        Authorization: `Bearer ${token}`
+      };
+    }
 
-  return config;
+    return config;
+  });
 });
 
 apiClient.interceptors.response.use(

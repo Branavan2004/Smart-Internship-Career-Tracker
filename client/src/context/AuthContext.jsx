@@ -1,6 +1,11 @@
 import { createContext, useEffect, useState } from "react";
 import { useAuthContext } from "@asgardeo/auth-react";
 import apiClient from "../api/apiClient";
+import {
+  clearAccessTokenGetter,
+  registerAccessTokenGetter,
+  storeAccessToken
+} from "../utils/authBridge";
 
 export const AuthContext = createContext(null);
 
@@ -26,14 +31,20 @@ export const AuthProvider = ({ children }) => {
 
     try {
       const accessToken = await getAccessToken();
-      if (accessToken) {
-        localStorage.setItem("careerTrackerToken", accessToken);
+      if (!accessToken) {
+        throw new Error("Asgardeo access token is not available yet.");
       }
 
-      const response = await apiClient.get("/auth/me");
+      storeAccessToken(accessToken);
+
+      const response = await apiClient.get("/auth/me", {
+        headers: {
+          Authorization: `Bearer ${accessToken}`
+        }
+      });
       setUser(response.data.user);
-    } catch (_error) {
-      console.error("Failed to load user:", _error?.response?.data || _error.message);
+    } catch (error) {
+      console.error("Failed to load user:", error?.response?.data || error.message);
     } finally {
       setLoading(false);
     }
@@ -49,8 +60,16 @@ export const AuthProvider = ({ children }) => {
   }, [state.isAuthenticated, state.isLoading]);
 
   useEffect(() => {
+    registerAccessTokenGetter(getAccessToken);
+
+    return () => {
+      clearAccessTokenGetter();
+    };
+  }, [getAccessToken]);
+
+  useEffect(() => {
     const handleSessionExpired = () => {
-      localStorage.removeItem("careerTrackerToken");
+      storeAccessToken(null);
       setUser(null);
       signOut().catch(() => null);
     };
@@ -67,6 +86,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   const logout = async () => {
+    storeAccessToken(null);
     await signOut();
   };
 

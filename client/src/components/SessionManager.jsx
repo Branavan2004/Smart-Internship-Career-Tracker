@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useCallback, useRef } from "react";
 import { useAuthContext } from "@asgardeo/auth-react";
+import { storeAccessToken } from "../utils/authBridge";
 
 /**
  * SessionManager handles token refresh, expiration warnings, and expired states.
@@ -34,7 +35,8 @@ const SessionManager = () => {
     
     setIsRefreshing(true);
     try {
-      await getAccessToken();
+      const nextToken = await getAccessToken();
+      storeAccessToken(nextToken || null);
     } catch (error) {
       console.error("Silent refresh failed:", error);
       handleSessionExpired();
@@ -153,7 +155,8 @@ const SessionManager = () => {
                 style={styles.primaryButton} 
                 onClick={async () => {
                   setWarningModal({ show: false, secondsLeft: 0 });
-                  await getAccessToken();
+                  const nextToken = await getAccessToken();
+                  storeAccessToken(nextToken || null);
                 }}
               >
                 Stay signed in
