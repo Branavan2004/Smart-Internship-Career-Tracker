@@ -23,7 +23,7 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  const getAccessTokenWithRetry = async (attempts = 8, delayMs = 400) => {
+  const getAccessTokenWithRetry = async (attempts = 15, delayMs = 600) => {
     for (let attempt = 0; attempt < attempts; attempt += 1) {
       const nextToken = await getAccessToken();
       if (nextToken) {
@@ -130,7 +130,9 @@ export const AuthProvider = ({ children }) => {
         loading,
         // isAuthenticated is based purely on Asgardeo state + having a token.
         // We do NOT require a successful backend /auth/me call to unblock navigation.
-        isAuthenticated: state.isAuthenticated && Boolean(token),
+        // isAuthenticated purely mirrors Asgardeo's own state.
+        // We do NOT gate navigation on local token state or backend availability.
+        isAuthenticated: state.isAuthenticated,
         login,
         logout,
         updateUser,
