@@ -93,7 +93,7 @@ export const AuthProvider = ({ children }) => {
     return () => {
       clearAccessTokenGetter();
     };
-  }, [getAccessToken]);
+  }, [getIDToken]);
 
   useEffect(() => {
     const handleSessionExpired = () => {
