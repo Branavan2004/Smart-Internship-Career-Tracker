@@ -2,7 +2,7 @@
 
 > A production full-stack internship management platform built on the **WSO2 enterprise stack**.
 
-🚀 **Live Deployment:** [CarrierX Smart Tracker on WSO2 Choreo](https://33cc0d8e-a16a-40d7-a552-06910eed4a61.e1-us-east-azure.choreoapps.dev/)
+🚀 **Live Deployment:** [CarrierX Smart Tracker on WSO2 Choreo](https://33cc0d8e-a16a-40d7-a552-06910eed4a61.e1-us-east-azure.choreoapps.dev)
 
 [![Architecture](https://img.shields.io/badge/docs-architecture-blue)](./docs/architecture.md)
 [![OpenAPI](https://img.shields.io/badge/API-OpenAPI%203.0-green)](./apim/openapi.yaml)
