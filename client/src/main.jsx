@@ -25,7 +25,7 @@ const asgardeoConfig = {
     signOutRedirectURL: signOutUrl,
     clientID: import.meta.env.VITE_ASGARDEO_CLIENT_ID || "your_client_id",
     baseUrl: import.meta.env.VITE_ASGARDEO_BASE_URL || "https://api.asgardeo.io/t/org900gq",
-    scope: [ "openid", "profile", "email" ],
+    scope: [ "openid", "profile", "email", "groups" ],
     storage: "sessionStorage",
     disableTrySignInSilently: true
 };
